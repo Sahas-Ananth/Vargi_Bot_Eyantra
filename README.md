@@ -22,7 +22,7 @@ Before you begin, ensure you have met the following requirements:
 
 To install Vargi Bot, follow these steps:
 
-Linux and macOS:
+Ubuntu 18.04:
 ```
 $ mkdir -p catkin_ws/src 
 $ cd catkin_ws/src
@@ -55,3 +55,4 @@ If you want to contact me you can reach us contact:
 * sahas_ananth@outlook.com.
 * niteesh.gs@gmail.com
 * vishalsivaraman5@gmail.com
+* promoth.n.2018.ece@rajalakshmi.edu.in
