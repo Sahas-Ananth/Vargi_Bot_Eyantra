@@ -111,11 +111,47 @@ class Ur5Moveit:
         box_pose.pose.position.z = 1.88
 
         box_pose.pose.orientation.w = 1.0
-        box_name = "box"
         scene.add_box(box_name, box_pose, size=(0.15, 0.15, 0.15))
 
         self.box_name = box_name
         return self.wait_for_state_update(box_is_known=True, timeout=timeout)
+
+    def attach_box(self, timeout=4):
+        box_name = self._box_name
+        robot = self._robot
+        scene = self._scene
+        eef_link = "vacuum_gripper_link"
+        group_names = self._group_names
+
+        grasping_group = "ur5_1_planning_group"
+        touch_links = robot.get_link_names(group=grasping_group)
+        scene.attach_box(eef_link, box_name, touch_links=touch_links)
+        rospy.loginfo("Attached package")
+
+        return self.wait_for_state_update(box_is_attached=True, box_is_known=False, timeout=timeout)
+
+    def detach_box(self, timeout=4):
+
+        box_name = self._box_name
+        scene = self._scene
+        eef_link = "vacuum_gripper_link"  # self._eef_link
+
+        scene.remove_attached_object(eef_link, name=box_name)
+
+        rospy.loginfo("Dettached package")
+        return self.wait_for_state_update(box_is_known=True, box_is_attached=False, timeout=timeout)
+
+    def remove_box(self, timeout=4):
+
+        box_name = self._box_name
+        scene = self._scene
+
+        scene.remove_world_object(box_name)
+
+        # **Note:** The object must be detached before we can remove it from the world
+
+        rospy.loginfo("Removed package")
+        return self.wait_for_state_update(box_is_attached=False, box_is_known=False, timeout=timeout)
 
     def go_to_predefined_pose(self, arg_pose_name):
         rospy.loginfo(
@@ -174,23 +210,23 @@ def main():
     ur5_back_away2.orientation.z = 0.143113841985
     ur5_back_away2.orientation.w = 0.69230832932
 
-    ur5_back_away3 = geometry_msgs.msg.Pose()
-    ur5_back_away3.position.x = 0.105759985315
-    ur5_back_away3.position.y = -0.489736470138
-    ur5_back_away3.position.z = 1.78029990242
-    ur5_back_away3.orientation.x = 0.143212005986
-    ur5_back_away3.orientation.y = 0.692642620997
-    ur5_back_away3.orientation.z = 0.143080417953
-    ur5_back_away3.orientation.w = 0.692289328907
+    # ur5_back_away3 = geometry_msgs.msg.Pose()
+    # ur5_back_away3.position.x = 0.105759985315
+    # ur5_back_away3.position.y = -0.489736470138
+    # ur5_back_away3.position.z = 1.78029990242
+    # ur5_back_away3.orientation.x = 0.143212005986
+    # ur5_back_away3.orientation.y = 0.692642620997
+    # ur5_back_away3.orientation.z = 0.143080417953
+    # ur5_back_away3.orientation.w = 0.692289328907
 
-    ur5_got2bin = geometry_msgs.msg.Pose()
-    ur5_got2bin.position.x = -0.768924999851
-    ur5_got2bin.position.y = -0.372580965627
-    ur5_got2bin.position.z = 1.2282796422
-    ur5_got2bin.orientation.x = -0.494160491129
-    ur5_got2bin.orientation.y = 0.352967401773
-    ur5_got2bin.orientation.z = -0.207456091249
-    ur5_got2bin.orientation.w = 0.766929848485
+    # ur5_got2bin = geometry_msgs.msg.Pose()
+    # ur5_got2bin.position.x = -0.768924999851
+    # ur5_got2bin.position.y = -0.372580965627
+    # ur5_got2bin.position.z = 1.2282796422
+    # ur5_got2bin.orientation.x = -0.494160491129
+    # ur5_got2bin.orientation.y = 0.352967401773
+    # ur5_got2bin.orientation.z = -0.207456091249
+    # ur5_got2bin.orientation.w = 0.766929848485
 
     ur5_bin = geometry_msgs.msg.Pose()
     ur5_bin.position.x = -0.744829906687
@@ -202,23 +238,28 @@ def main():
     ur5_bin.orientation.w = 0.567401226281
 
     while not rospy.is_shutdown():
+        ur5.go_to_predefined_pose("allZeros")
+        rospy.sleep(0.5)
         ur5.go_to_pose(ur5_get2box)
         rospy.sleep(0.5)
+        ur5.attach_box()
         gripper(True)
         rospy.sleep(0.5)
         ur5.go_to_pose(ur5_back_away1)
         rospy.sleep(0.5)
         ur5.go_to_pose(ur5_back_away2)
         rospy.sleep(0.5)
-        ur5.go_to_pose(ur5_back_away3)
-        rospy.sleep(0.5)
-        ur5.go_to_pose(ur5_got2bin)
-        rospy.sleep(0.5)
+        # ur5.go_to_pose(ur5_back_away3)
+        # rospy.sleep(0.5)
+        # ur5.go_to_pose(ur5_got2bin)
+        # rospy.sleep(0.5)
         ur5.go_to_pose(ur5_bin)
         rospy.sleep(0.5)
+        ur5.detach_box()
         gripper(False)
         rospy.sleep(0.5)
         ur5.go_to_predefined_pose("allZeros")
+        ur5.remove_box()
         rospy.sleep(2)
         break
 
