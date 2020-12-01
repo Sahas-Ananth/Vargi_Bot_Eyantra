@@ -210,14 +210,14 @@ def main():
     ur5_back_away2.orientation.z = 0.143113841985
     ur5_back_away2.orientation.w = 0.69230832932
 
-    # ur5_back_away3 = geometry_msgs.msg.Pose()
-    # ur5_back_away3.position.x = 0.105759985315
-    # ur5_back_away3.position.y = -0.489736470138
-    # ur5_back_away3.position.z = 1.78029990242
-    # ur5_back_away3.orientation.x = 0.143212005986
-    # ur5_back_away3.orientation.y = 0.692642620997
-    # ur5_back_away3.orientation.z = 0.143080417953
-    # ur5_back_away3.orientation.w = 0.692289328907
+    ur5_back_away3 = geometry_msgs.msg.Pose()
+    ur5_back_away3.position.x = 0.105759985315
+    ur5_back_away3.position.y = -0.489736470138
+    ur5_back_away3.position.z = 1.78029990242
+    ur5_back_away3.orientation.x = 0.143212005986
+    ur5_back_away3.orientation.y = 0.692642620997
+    ur5_back_away3.orientation.z = 0.143080417953
+    ur5_back_away3.orientation.w = 0.692289328907
 
     # ur5_got2bin = geometry_msgs.msg.Pose()
     # ur5_got2bin.position.x = -0.768924999851
@@ -242,24 +242,24 @@ def main():
         rospy.sleep(0.5)
         ur5.go_to_pose(ur5_get2box)
         rospy.sleep(0.5)
-        ur5.attach_box()
+        ur5.attach_box(1)
         gripper(True)
         rospy.sleep(0.5)
         ur5.go_to_pose(ur5_back_away1)
         rospy.sleep(0.5)
         ur5.go_to_pose(ur5_back_away2)
         rospy.sleep(0.5)
-        # ur5.go_to_pose(ur5_back_away3)
-        # rospy.sleep(0.5)
+        ur5.go_to_pose(ur5_back_away3)
+        rospy.sleep(0.5)
         # ur5.go_to_pose(ur5_got2bin)
         # rospy.sleep(0.5)
         ur5.go_to_pose(ur5_bin)
         rospy.sleep(0.5)
-        ur5.detach_box()
+        ur5.detach_box(1)
         gripper(False)
         rospy.sleep(0.5)
         ur5.go_to_predefined_pose("allZeros")
-        ur5.remove_box()
+        ur5.remove_box(2)
         rospy.sleep(2)
         break
 
