@@ -28,7 +28,6 @@ class Ur5:
         self._planning_frame = self._group.get_planning_frame()
         self._eef_link = self._group.get_end_effector_link()
         self._group_names = self._robot.get_group_names()
-        self._box_name = 'package'
 
         self._gripper = rospy.ServiceProxy(
             name="/eyrc/vb/ur5_1/activate_vacuum_gripper", service_class=vacuumGripper)
@@ -79,9 +78,7 @@ class Ur5:
 
         return flag_plan
 
-    def wait_for_state_update(self, box_is_known=False, box_is_attached=False, timeout=4):
-
-        box_name = self._box_name
+    def wait_for_state_update(self, box_is_known=False, box_is_attached=False, timeout=4, box_name=""):
         scene = self._scene
 
         start = rospy.get_time()
@@ -102,25 +99,15 @@ class Ur5:
 
         return False
 
-    def add_box(self, timeout=4):
-        box_name = self._box_name
+    def add_box(self, box_name, box_pose, box_size, timeout=4):
         scene = self._scene
 
-        box_pose = geometry_msgs.msg.PoseStamped()
-        box_pose.header.frame_id = "world"
-
-        box_pose.pose.position.x = 0.04
-        box_pose.pose.position.y = 0.44
-        box_pose.pose.position.z = 1.88
-
-        box_pose.pose.orientation.w = 1.0
-        scene.add_box(box_name, box_pose, size=(0.15, 0.15, 0.15))
+        scene.add_box(box_name, box_pose, size=(box_size, box_size, box_size))
 
         self.box_name = box_name
-        return self.wait_for_state_update(box_is_known=True, timeout=timeout)
+        return self.wait_for_state_update(box_is_known=True, timeout=timeout, box_name=box_name)
 
-    def attach_box(self, timeout=4):
-        box_name = self._box_name
+    def attach_box(self, box_name, timeout=4):
         robot = self._robot
         scene = self._scene
         eef_link = "vacuum_gripper_link"
@@ -130,22 +117,18 @@ class Ur5:
         scene.attach_box(eef_link, box_name, touch_links=touch_links)
         rospy.loginfo("Attached package")
 
-        return self.wait_for_state_update(box_is_attached=True, box_is_known=False, timeout=timeout)
+        return self.wait_for_state_update(box_is_attached=True, box_is_known=False, timeout=timeout, box_name = box_name)
 
-    def detach_box(self, timeout=4):
-
-        box_name = self._box_name
+    def detach_box(self, box_name, timeout=4):
         scene = self._scene
         eef_link = "vacuum_gripper_link"  # self._eef_link
 
         scene.remove_attached_object(eef_link, name=box_name)
 
         rospy.loginfo("Dettached package")
-        return self.wait_for_state_update(box_is_known=True, box_is_attached=False, timeout=timeout)
+        return self.wait_for_state_update(box_is_known=True, box_is_attached=False, timeout=timeout, box_name=box_name)
 
-    def remove_box(self, timeout=4):
-
-        box_name = self._box_name
+    def remove_box(self, box_name, timeout=4):
         scene = self._scene
 
         scene.remove_world_object(box_name)
@@ -153,7 +136,7 @@ class Ur5:
         # **Note:** The object must be detached before we can remove it from the world
 
         rospy.loginfo("Removed package")
-        return self.wait_for_state_update(box_is_attached=False, box_is_known=False, timeout=timeout)
+        return self.wait_for_state_update(box_is_attached=False, box_is_known=False, timeout=timeout, box_name=box_name)
 
     def go_to_predefined_pose(self, arg_pose_name):
 
@@ -208,11 +191,11 @@ class Ur5:
         # 6. Make the arm follow the Computed Cartesian Path
         self._group.execute(plan)
 
-    def gripper(self, val):
+    def gripper(self, box_name, val):
         if val == True:
-            self.attach_box(1)
+            self.attach_box(box_name, 1)
         else:
-            self.detach_box(1)
+            self.detach_box(box_name, 1)
         self._gripper(val)
 
     # Destructor
