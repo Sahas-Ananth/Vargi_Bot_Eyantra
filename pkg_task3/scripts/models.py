@@ -1,6 +1,16 @@
 #! /usr/bin/env python
 import geometry_msgs.msg
 
+# UR5 Starting position
+ur5_starting_pose = geometry_msgs.msg.Pose()
+ur5_starting_pose.position.x = -0.80
+ur5_starting_pose.position.y = 0.107
+ur5_starting_pose.position.z = 1.40
+ur5_starting_pose.orientation.x = -0.5
+ur5_starting_pose.orientation.y = -0.5
+ur5_starting_pose.orientation.z = 0.5
+ur5_starting_pose.orientation.w = 0.5
+
 # Sorting bin location wrt world in gazebo
 gazebo_red_bin = geometry_msgs.msg.Pose()
 gazebo_red_bin.position.x = 0.11

@@ -26,7 +26,9 @@ class Task3:
         self._ur5 = Ur5()
         self._tf = TF()
 
-        self._ur5.go_to_predefined_pose("straightUp")
+        # Move the arm to a proper starting position
+        while not self._ur5.go_to_pose(ur5_starting_pose) and not rospy.is_shutdown():
+            rospy.sleep(0.5)
         rospy.sleep(2)
 
 
