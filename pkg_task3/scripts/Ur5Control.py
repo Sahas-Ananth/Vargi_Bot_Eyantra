@@ -65,10 +65,6 @@ class Ur5:
         rospy.loginfo('\033[94m' + ">>> Final Pose:" + '\033[0m')
         rospy.loginfo(pose_values)
 
-        list_joint_values = self._group.get_current_joint_values()
-        rospy.loginfo('\033[94m' + ">>> Final Joint Values:" + '\033[0m')
-        rospy.loginfo(list_joint_values)
-
         if (flag_plan == True):
             rospy.loginfo(
                 '\033[94m' + ">>> go_to_pose() Success" + '\033[0m')
