@@ -3,9 +3,9 @@ import geometry_msgs.msg
 
 # UR5 Starting position
 ur5_starting_pose = geometry_msgs.msg.Pose()
-ur5_starting_pose.position.x = -0.80
+ur5_starting_pose.position.x = -0.40
 ur5_starting_pose.position.y = 0.107
-ur5_starting_pose.position.z = 1.40
+ur5_starting_pose.position.z = 1.45
 ur5_starting_pose.orientation.x = -0.5
 ur5_starting_pose.orientation.y = -0.5
 ur5_starting_pose.orientation.z = 0.5
@@ -41,3 +41,6 @@ gazebo_blue_bin.orientation.w = 0.5
 
 box_length = 0.15               # Length of the Package
 vacuum_gripper_width = 0.115    # Vacuum Gripper Width
+
+def debug(f):
+    print u'\u001b[36;1m' + f + u'\u001b[0m'
