@@ -5,8 +5,12 @@ from ConveyorControl import Conveyor
 from Ur5Control import Ur5
 from tf import TF
 from models import *
+from pkg_task3.msg import ur5PickupAction
+from pkg_task3.msg import ur5PickupResult
+from pkg_task3.msg import ur5PickupFeedback
 
 import rospy
+import actionlib
 import tf2_ros
 
 class Task3:
@@ -14,12 +18,12 @@ class Task3:
         rospy.init_node("node_t3_ur5_control")
 
         # Reference frames used in TF
-        self._ref_frame = "world"
-        self._target_frame = "logical_camera_2_{}_frame"
+        self._ref_frame = "logical_camera_2_{}_frame"
+        self._target_frame = "ur5_ee_link"
 
         # Offset to be maintained from the package to properly
         # pickup the object
-        self._delta = vacuum_gripper_width + (box_length/2)
+        self._delta = 0.11 # vacuum_gripper_width + (box_length/2)
 
         # UR5 control instance
         self._ur5 = Ur5()
@@ -28,148 +32,72 @@ class Task3:
         # Instance to control the conveyor belt
         self._conveyor = Conveyor()
 
-        self._packages_processed = []
-        self._packages_processing = []
+        self._sas = actionlib.SimpleActionServer("/ur5_pickup",
+                                                 ur5PickupAction,
+                                                 execute_cb=self.on_goal,
+                                                 auto_start=False)
 
         # Move the arm to a proper starting position
-        while not self._ur5.go_to_pose(ur5_starting_pose) and not rospy.is_shutdown():
+        while not self._ur5.set_joint_angles(ur5_starting_angles) and not rospy.is_shutdown():
             rospy.sleep(0.5)
-        rospy.sleep(2)
+        rospy.sleep(1)
 
-        # Start the conveyor
-        self._conveyor.set_power(60)
-
-        # Subscribing to logical camera topic
-        self._camera = rospy.Subscriber("/eyrc/vb/logical_camera_2", LogicalCameraImage, self._camera_callback, queue_size=1)
-
-    def _camera_callback(self, msg):
-        self._camera.unregister()
-
-        models = msg.models
-
-        if len(models) < 1:
-            debug('callback early return len(models) < 1')
-            return
-        if len(models) == 1 and models[0].type == "ur5":
-            debug('callback early return len(models) == 1')
-            return
-
-        for model in models:
-            if model.type in self._packages_processed:
-                return
-
-        debug(str(models[0].pose))
-        pos_y = models[0].pose.position.y
-        if pos_y > 0.40:
-            return
-
-        self._conveyor.stop()
-
-        for model in models:
-            if model.type == "ur5":
-                continue
-            package = model.type
-            if package not in self._packages_processing and \
-               package not in self._packages_processed:
-
-                debug('appending ' + str(package) + ' gazebo pacakges')
-                self._packages_processing.append(package)
-        self.execute()
-        debug('exiting callback')
+        rospy.loginfo("\033[32;1mUR5 Control: Starting Simple Action Server.\033[0m")
+        self._sas.start()
 
     def _get_bin(self, package):
         if package == "packagen1":
-            return gazebo_red_bin
+            return gazebo_red_bin_angles
         elif package == "packagen2":
-            return gazebo_green_bin
+            return gazebo_green_bin_angles
         elif package == "packagen3":
-            return gazebo_blue_bin
+            return gazebo_blue_bin_angles
 
-    def run(self):
-        debug('in run')
+    def on_goal(self, obj_msg_goal):
+        """
+        Process goals and send results
+        """
+        rospy.loginfo("\033[32;1mUR5 Control: Received a Goal from Client.\033[0m")
+        rospy.loginfo("\033[32;1mpackage: {}\033[0m".format(obj_msg_goal.package_name))
 
-        if len(self._packages_processing) == 0:
-            return True
-        
-        debug('package found, picking up pacakge')
-        model = self._packages_processing[0]
+        package_name = obj_msg_goal.package_name
 
-        debug('-----------------------------------------')
-        debug(self._ref_frame)
-        debug(self._target_frame.format(model))
-        debug('-----------------------------------------')
+        trans = self._tf.lookup_transform(self._ref_frame.format(package_name), self._target_frame)
 
-        trans = self._tf.lookup_transform(self._ref_frame, self._target_frame.format(model))
+        trans_x = -trans.transform.translation.x
+        trans_y = -trans.transform.translation.y
+        trans_z = -trans.transform.translation.z + self._delta
 
-        package_pose = geometry_msgs.msg.PoseStamped()
-        package_pose.header.frame_id = "world"
+        # Send Result to the Client
+        obj_msg_result = ur5PickupResult()
 
-        package_pose.pose.position.x = trans.transform.translation.x
-        package_pose.pose.position.y = trans.transform.translation.y
-        package_pose.pose.position.z = trans.transform.translation.z
-        package_pose.pose.orientation.x = trans.transform.rotation.x
-        package_pose.pose.orientation.y = trans.transform.rotation.y
-        package_pose.pose.orientation.z = trans.transform.rotation.z
-        package_pose.pose.orientation.w = trans.transform.rotation.w
-
-        ur5_arm_pose = geometry_msgs.msg.Pose()
-        ur5_arm_pose.position.x = trans.transform.translation.x                                                                                                                       
-        ur5_arm_pose.position.y = trans.transform.translation.y
-        ur5_arm_pose.position.z = trans.transform.translation.z + self._delta
-        ur5_arm_pose.orientation.x = -0.5
-        ur5_arm_pose.orientation.y = -0.5
-        ur5_arm_pose.orientation.z = 0.5
-        ur5_arm_pose.orientation.w = 0.5
-
-        # --------------------'
-        # print ur5_arm_pose
-        # --------------------'
-
-        # self._ur5.add_box(model, package_pose, box_length)
-
-        debug('trying to pickup package')
         tries = 3
-        while tries > 0 and not self._ur5.go_to_pose(ur5_arm_pose) and not rospy.is_shutdown():
+        while tries > 0 and not self._ur5.ee_cartesian_translation(trans_x, trans_y, trans_z) and not rospy.is_shutdown():
+            rospy.loginfo('\033[33;1mMoving to package failed, Trying again\033[0m')
             rospy.sleep(0.5)
             tries -= 1
         if tries == 0:
-            debug('trying failed')
-            return False
+            rospy.loginfo('\033[33;1mAll tries failed\033[0m')
+            obj_msg_result.success = False
+            self._sas.set_succeeded(obj_msg_result)
+            return
 
-        self._ur5.gripper(model, True)
+        self._ur5.gripper(package_name, True)
 
-        while not self._ur5.go_to_pose(self._get_bin(model)) and not rospy.is_shutdown():
+        while not self._ur5.set_joint_angles(self._get_bin(package_name)) and not rospy.is_shutdown():
             rospy.sleep(0.5)
 
-        self._ur5.gripper(model, False)
+        self._ur5.gripper(package_name, False)
 
-        debug('removing package from gazebo package list')
-        self._packages_processed.append(model)
-        self._packages_processing.pop(0)
+        rospy.logdebug('\033[33;1mSending result back to client\033[0m')
+        obj_msg_result.success = True
+        self._sas.set_succeeded(obj_msg_result)
 
-        while not self._ur5.go_to_pose(ur5_starting_pose) and not rospy.is_shutdown():
+        while not self._ur5.set_joint_angles(ur5_starting_angles) and not rospy.is_shutdown():
             rospy.sleep(0.5)
-        
-        debug('in run')
-        return True
-    
-    def execute(self):
-        debug('in execute')
-        debug(str(self._packages_processing))
-        for _ in self._packages_processing:
-            pickedup = self.run()
-            while not pickedup:
-                self._conveyor.set_power(40)
-                rospy.sleep(1)
-                self._conveyor.stop()
-                pickedup = self.run()
-        debug('exiting execute')
-        self._conveyor.set_power(40)
-        self._camera = rospy.Subscriber("/eyrc/vb/logical_camera_2", LogicalCameraImage, self._camera_callback)
+
 
 if __name__ == '__main__':
     task3_solution = Task3()
 
-    while not rospy.is_shutdown():
-        task3_solution.execute()
-        rospy.spin()
+    rospy.spin()
