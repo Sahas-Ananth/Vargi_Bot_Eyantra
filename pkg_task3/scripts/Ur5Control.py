@@ -9,6 +9,7 @@ import geometry_msgs.msg
 import actionlib
 import copy
 import sys
+import math
 
 class Ur5:
     # Constructor
@@ -51,19 +52,11 @@ class Ur5:
         return self._group.get_current_pose().pose
 
     def go_to_pose(self, arg_pose):
-
-        pose_values = self._group.get_current_pose().pose
-        rospy.loginfo('\033[94m' + ">>> Current Pose:" + '\033[0m')
-        rospy.loginfo(pose_values)
-
+        rospy.loginfo('\033[94m' + 'Moving to pose {}'.format(arg_pose) + '\033[0m')
         self._group.set_pose_target(arg_pose)
         flag_plan = self._group.go(wait=True)  # wait=False for Async Move
         self._group.stop()
         self._group.clear_pose_targets()
-
-        pose_values = self._group.get_current_pose().pose
-        rospy.loginfo('\033[94m' + ">>> Final Pose:" + '\033[0m')
-        rospy.loginfo(pose_values)
 
         if (flag_plan == True):
             rospy.loginfo(
@@ -134,10 +127,42 @@ class Ur5:
         rospy.loginfo("Removed package")
         return self.wait_for_state_update(box_is_attached=False, box_is_known=False, timeout=timeout, box_name=box_name)
 
-    def go_to_predefined_pose(self, arg_pose_name):
+    def print_joint_angles(self):
+        list_joint_values = self._group.get_current_joint_values()
 
+        rospy.loginfo('\033[94m' + "\nJoint Values: \n\n" +
+                      "ur5_shoulder_pan_joint: {}\n".format(math.degrees(list_joint_values[0])) +
+                      "ur5_shoulder_lift_joint: {}\n".format(math.degrees(list_joint_values[1])) +
+                      "ur5_elbow_joint: {}\n".format(math.degrees(list_joint_values[2])) +
+                      "ur5_wrist_1_joint: {}\n".format(math.degrees(list_joint_values[3])) +
+                      "ur5_wrist_2_joint: {}\n".format(math.degrees(list_joint_values[4])) +
+                      "ur5_wrist_3_joint: {}\n".format(math.degrees(list_joint_values[5])) +
+                      '\033[0m')
+
+    def set_joint_angles(self, arg_list_joint_angles):
+        rospy.loginfo(
+            '\033[94m' + "Set joint angles to {}".format(arg_list_joint_angles) + '\033[0m')
+
+        # Joint angles should be in degress
+        arg_list_joint_angles = map(math.radians, arg_list_joint_angles)
+
+        self._group.set_joint_value_target(arg_list_joint_angles)
+        self._group.plan()
+        flag_plan = self._group.go(wait=True)
+
+        if (flag_plan == True):
+            rospy.loginfo(
+                '\033[94m' + ">>> set_joint_angles() Success" + '\033[0m')
+        else:
+            rospy.logerr(
+                '\033[94m' + ">>> set_joint_angles() Failed." + '\033[0m')
+
+        return flag_plan
+
+    def go_to_predefined_pose(self, arg_pose_name):
         rospy.loginfo(
             '\033[94m' + "Going to Pose: {}".format(arg_pose_name) + '\033[0m')
+
         self._group.set_named_target(arg_pose_name)
         plan = self._group.plan()
         goal = moveit_msgs.msg.ExecuteTrajectoryGoal()
@@ -165,10 +190,8 @@ class Ur5:
         wpose.orientation.z = 0.5
         wpose.orientation.w = 0.5
 
-
         # 4. Add the new waypoint to the list of waypoints
         waypoints.append(copy.deepcopy(wpose))
-
 
         # 5. Compute Cartesian Path connecting the waypoints in the list of waypoints
         (plan, _) = self._group.compute_cartesian_path(
@@ -185,7 +208,7 @@ class Ur5:
             del plan.joint_trajectory.points[1]
 
         # 6. Make the arm follow the Computed Cartesian Path
-        self._group.execute(plan)
+        return self._group.execute(plan)
 
     def gripper(self, box_name, val):
         if val == True:
