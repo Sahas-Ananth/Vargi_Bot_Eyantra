@@ -1,11 +1,19 @@
 #! /usr/bin/env python
 import geometry_msgs.msg
 
+ur5_starting_angles = [0.1026, -139.13, -39.04, -91.14, 90.005, 179.35]
+
+gazebo_red_bin_angles = [-95.35, -105.78, -82.37, -80.629, 86.149, 77.032]
+
+gazebo_green_bin_angles = [-171.77, -114.084, -69.485, -82.30, 92.412, -7.447]
+
+gazebo_blue_bin_angles = [-89.38, -69.146, 63.701, -89.01, -89.97, 89.736]
+
 # UR5 Starting position
 ur5_starting_pose = geometry_msgs.msg.Pose()
-ur5_starting_pose.position.x = -0.40
-ur5_starting_pose.position.y = 0.107
-ur5_starting_pose.position.z = 1.45
+ur5_starting_pose.position.x = -0.80
+ur5_starting_pose.position.y = 0.10
+ur5_starting_pose.position.z = 1.25
 ur5_starting_pose.orientation.x = -0.5
 ur5_starting_pose.orientation.y = -0.5
 ur5_starting_pose.orientation.z = 0.5
