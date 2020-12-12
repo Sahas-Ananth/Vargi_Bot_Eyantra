@@ -5,6 +5,7 @@ from ConveyorControl import Conveyor
 from Ur5Control import Ur5
 from tf import TF
 from models import *
+from geometry_msgs.msg import PoseStamped
 from pkg_task3.msg import ur5PickupAction
 from pkg_task3.msg import ur5PickupResult
 from pkg_task3.msg import ur5PickupFeedback
@@ -82,12 +83,21 @@ class Task3:
             self._sas.set_succeeded(obj_msg_result)
             return
 
+        trans = self._tf.lookup_transform("world", self._ref_frame.format(package_name))
+
+        pose = PoseStamped()
+        pose.header.frame_id = "world"
+        pose.pose.position = trans.transform.translation
+        pose.pose.orientation = trans.transform.rotation
+
+        self._ur5.add_box(package_name, pose, box_length, 1)
         self._ur5.gripper(package_name, True)
 
         while not self._ur5.set_joint_angles(self._get_bin(package_name)) and not rospy.is_shutdown():
             rospy.sleep(0.5)
 
         self._ur5.gripper(package_name, False)
+        self._ur5.remove_box(package_name, 1)
 
         rospy.logdebug('\033[33;1mSending result back to client\033[0m')
         obj_msg_result.success = True

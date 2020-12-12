@@ -106,7 +106,7 @@ class Ur5:
         scene.attach_box(eef_link, box_name, touch_links=touch_links)
         rospy.loginfo("Attached package")
 
-        return self.wait_for_state_update(box_is_attached=True, box_is_known=False, timeout=timeout, box_name = box_name)
+        return self.wait_for_state_update(box_is_attached=True, box_is_known=False, timeout=timeout, box_name=box_name)
 
     def detach_box(self, box_name, timeout=4):
         scene = self._scene
@@ -212,9 +212,9 @@ class Ur5:
 
     def gripper(self, box_name, val):
         if val == True:
-            self.attach_box(box_name, 1)
+            self.attach_box(box_name, 0.5)
         else:
-            self.detach_box(box_name, 1)
+            self.detach_box(box_name, 0.5)
         self._gripper(val)
 
     # Destructor
