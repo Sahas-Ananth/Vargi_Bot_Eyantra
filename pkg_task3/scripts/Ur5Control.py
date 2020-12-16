@@ -1,18 +1,52 @@
 #! /usr/bin/env python
 
-from pkg_vb_sim.srv import *
+# Copyright <2020> <Niteesh G S>
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+#  * Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#  * Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in
+#    the documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+# COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+
+"""
+This module is responsible for manipulating the arm.
+It interfaces with the moveit commander.
+"""
+
+import copy
+import sys
+import math
 
 import rospy
 import moveit_commander
 import moveit_msgs.msg
 import geometry_msgs.msg
 import actionlib
-import copy
-import sys
-import math
 
-class Ur5:
-    # Constructor
+from pkg_vb_sim.srv import vacuumGripper
+
+class Ur5(object):
+    """
+    Most of the code in this class has been taken from
+    eyantra site and moveit code examples.
+    """
     def __init__(self):
         self._planning_group = "ur5_1_planning_group"
         self._commander = moveit_commander.roscpp_initialize(sys.argv)
@@ -30,6 +64,8 @@ class Ur5:
         self._planning_frame = self._group.get_planning_frame()
         self._eef_link = self._group.get_end_effector_link()
         self._group_names = self._robot.get_group_names()
+
+        self.box_name = ""
 
         self._gripper = rospy.ServiceProxy(
             name="/eyrc/vb/ur5_1/activate_vacuum_gripper", service_class=vacuumGripper)
@@ -59,7 +95,7 @@ class Ur5:
         self._group.stop()
         self._group.clear_pose_targets()
 
-        if (flag_plan == True):
+        if flag_plan is True:
             rospy.loginfo(
                 '\033[94m' + ">>> go_to_pose() Success" + '\033[0m')
         else:
@@ -91,8 +127,8 @@ class Ur5:
 
     def add_box(self, box_name, box_pose, box_size, timeout=4):
         scene = self._scene
-
-        scene.add_box(box_name, box_pose, size=(box_size, box_size, box_size))
+        size = (box_size, box_size, box_size)
+        scene.add_box(box_name, box_pose, size=size)
 
         self.box_name = box_name
         return self.wait_for_state_update(box_is_known=True, timeout=timeout, box_name=box_name)
@@ -151,7 +187,7 @@ class Ur5:
         self._group.plan()
         flag_plan = self._group.go(wait=True)
 
-        if (flag_plan == True):
+        if flag_plan is True:
             rospy.loginfo(
                 '\033[94m' + ">>> set_joint_angles() Success" + '\033[0m')
         else:
@@ -172,7 +208,7 @@ class Ur5:
         self._exectute_trajectory_client.wait_for_result()
         rospy.loginfo(
             '\033[94m' + "Now at Pose: {}".format(arg_pose_name) + '\033[0m')
-    
+
     def ee_cartesian_translation(self, trans_x, trans_y, trans_z):
         # 1. Create a empty list to hold waypoints
         waypoints = []
@@ -182,8 +218,8 @@ class Ur5:
 
         # 3. Create a New waypoint
         wpose = geometry_msgs.msg.Pose()
-        wpose.position.x = waypoints[0].position.x + (trans_x)  
-        wpose.position.y = waypoints[0].position.y + (trans_y)  
+        wpose.position.x = waypoints[0].position.x + (trans_x)
+        wpose.position.y = waypoints[0].position.y + (trans_y)
         wpose.position.z = waypoints[0].position.z + (trans_z)
         # This to keep EE parallel to Ground Plane
         wpose.orientation.x = -0.5
@@ -204,7 +240,7 @@ class Ur5:
         # The reason for deleting the first two waypoints from the computed Cartisian Path can be found here,
         # https://answers.ros.org/question/253004/moveit-problem-error-trajectory-message-contains-waypoints-that-are-not-strictly-increasing-in-time/?answer=257488#post-id-257488
         num_pts = len(plan.joint_trajectory.points)
-        if (num_pts >= 3):
+        if num_pts >= 3:
             del plan.joint_trajectory.points[0]
             del plan.joint_trajectory.points[1]
 
@@ -212,7 +248,7 @@ class Ur5:
         return self._group.execute(plan)
 
     def gripper(self, box_name, val):
-        if val == True:
+        if val is True:
             self.attach_box(box_name, 0.5)
         else:
             self.detach_box(box_name, 0.5)
