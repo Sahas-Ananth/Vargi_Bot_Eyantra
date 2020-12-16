@@ -19,6 +19,7 @@ class Ur5:
         self._robot = moveit_commander.RobotCommander()
         self._scene = moveit_commander.PlanningSceneInterface()
         self._group = moveit_commander.MoveGroupCommander(self._planning_group)
+        self._group.set_planner_id("RRTConnect")
         self._display_trajectory_publisher = rospy.Publisher(
             '/move_group/display_planned_path', moveit_msgs.msg.DisplayTrajectory, queue_size=1)
 
