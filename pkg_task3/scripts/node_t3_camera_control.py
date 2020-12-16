@@ -40,7 +40,8 @@ class Camera:
 
         if result.success == True:
             self.processed.append(self.current_package)
-            self.conveyor.set_power(70)
+            if len(self.processed) != 3:
+                self.conveyor.set_power(70)
         else:
             self.conveyor.set_power(25)
             rospy.sleep(1)
@@ -81,8 +82,7 @@ class Camera:
             self.current_package = current_packages[0].type
             self.processing = True
             return
-            
-        self.conveyor.set_power(70)
+
 
 def main():
     rospy.init_node("node_t3_camera_control")
