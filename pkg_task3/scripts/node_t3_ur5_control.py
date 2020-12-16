@@ -39,7 +39,7 @@ class Task3:
                                                  auto_start=False)
 
         # Move the arm to a proper starting position
-        while not self._ur5.set_joint_angles(ur5_starting_angles) and not rospy.is_shutdown():
+        while not self._ur5.set_joint_angles(ur5_new_starting_angles) and not rospy.is_shutdown():
             rospy.sleep(0.5)
         rospy.sleep(1)
 
@@ -53,6 +53,14 @@ class Task3:
             return gazebo_green_bin_angles
         elif package == "packagen3":
             return gazebo_blue_bin_angles
+
+    def _get_next_pose(self, package):
+        if package == "packagen1":
+            return ur5_green_box_angles
+        if package == "packagen2":
+            return ur5_blue_box_angles
+        if package == "packagen3":
+            return ur5_starting_angles
 
     def on_goal(self, obj_msg_goal):
         """
@@ -90,20 +98,23 @@ class Task3:
         pose.pose.position = trans.transform.translation
         pose.pose.orientation = trans.transform.rotation
 
-        self._ur5.add_box(package_name, pose, box_length, 1)
+        self._ur5.add_box(package_name, pose, box_length, 0.5)
         self._ur5.gripper(package_name, True)
 
         while not self._ur5.set_joint_angles(self._get_bin(package_name)) and not rospy.is_shutdown():
             rospy.sleep(0.5)
 
         self._ur5.gripper(package_name, False)
-        self._ur5.remove_box(package_name, 1)
+        self._ur5.remove_box(package_name, 0.5)
 
         rospy.logdebug('\033[33;1mSending result back to client\033[0m')
         obj_msg_result.success = True
         self._sas.set_succeeded(obj_msg_result)
 
-        while not self._ur5.set_joint_angles(ur5_starting_angles) and not rospy.is_shutdown():
+        # Optimization for time
+        # while not self._ur5.set_joint_angles(ur5_starting_angles) and not rospy.is_shutdown():
+        #     rospy.sleep(0.5)
+        while not self._ur5.set_joint_angles(self._get_next_pose(package_name)) and not rospy.is_shutdown():
             rospy.sleep(0.5)
 
 
