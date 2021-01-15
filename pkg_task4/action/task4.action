@@ -1,0 +1,10 @@
+# goal
+string package_name
+string colour
+geometry_msgs/Pose package_pose
+---
+# result
+bool success
+---
+# feedback
+geometry_msgs/Pose arm_pose
