@@ -1,0 +1,36 @@
+<launch>
+    <!-- Launch Task-4 Simulation Environment in Gazebo -->
+    <include file="$(find pkg_vb_sim)/launch/task4_simulation.launch" />
+
+    <!-- Launch Moveit move_group Node -->
+    <include file="$(find pkg_vb_sim)/launch/two_ur5_move_group.launch"/>
+
+    <group ns="ur5_1">
+        <arg name="scene_file" default="$(find pkg_task4)/config/rviz/ur5_1_kiva_pod.scene"/> 
+        <node name = "moveit_publish_scene_from_text" pkg= "moveit_ros_planning" type = "moveit_publish_scene_from_text" args= "$(arg scene_file)"/>
+    </group>
+
+    <group ns="ur5_2">
+        <arg name="scene_file" default="$(find pkg_task4)/config/rviz/ur5_2_sorting.scene"/> 
+        <node name = "moveit_publish_scene_from_text" pkg= "moveit_ros_planning" type = "moveit_publish_scene_from_text" args= "$(arg scene_file)"/>
+    </group>
+
+    <!-- Run Task-4 sorting ROS Nodes -->
+
+    <!-- This node controls the UR5 robot using moveit commander -->
+    <!-- <node name= "node_t3_ur5_control" pkg= "pkg_task3" type="node_t3_ur5_control.py" output="screen"/> -->
+    
+    <!-- This node gets the TF of the package and sends it to the UR5 moveit planner -->
+    <!-- <node name= "node_t3_camera_control" pkg= "pkg_task3" type="node_t3_camera_control.py" output="screen"/> -->
+    
+    <!-- Recording Bag File for Submission -->
+    <arg name="record" default="false"/>
+    <arg name="rec_name" default="t4.bag"/>
+
+    <group if="$(arg record)">
+        <node name="rosbag_record_pick" pkg="rosbag" type="record"
+                args="record -O $(find pkg_task4)/bag_files/$(arg rec_name) --chunksize=10 /eyrc/vb/ur5_1/vacuum_gripper/logical_camera/ur5_1" output="screen"/>
+    </group>
+
+
+</launch>
