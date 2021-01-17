@@ -15,7 +15,6 @@ class Camera1:
     self.bridge = CvBridge()
     self.image_sub = rospy.Subscriber("/eyrc/vb/camera_1/image_raw", Image,self.callback)
 
-  # Ref: GeekforGeeks.com, https://www.geeksforgeeks.org/detect-the-rgb-color-from-a-webcam-using-python-opencv/
   def get_dominant_colour(self, img):
       #converting image from BGR to hue saturation value
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
