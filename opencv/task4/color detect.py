@@ -49,7 +49,7 @@ class Camera1:
                         break
         for c in cnts3:
                 area3=cv2.contourArea(c)
-                if area1<100:
+                if area3:
                         return "Red"
                         break
   
