@@ -39,12 +39,12 @@ class Camera1:
         cnts3=imutils.grab_contours(cnts3)
         for c in cnts1:
                 area1=cv2.contourArea(c)
-                if area1<100:
+                if area1:
                         return "Yellow"
                         break
         for c in cnts2:
                 area2=cv2.contourArea(c)
-                if area1<100:
+                if area2:
                         return "Green"
                         break
         for c in cnts3:
