@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+# This ia an alternate version of the code which can be used for color detection as specified in task-4
 import rospy
 import cv2
 import sys
