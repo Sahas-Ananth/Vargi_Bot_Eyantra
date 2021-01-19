@@ -35,6 +35,7 @@ class Ur5Controller(object):
         self._group = moveit_commander.MoveGroupCommander(
             self._planning_group, robot_description=self._robot_ns + "/robot_description", ns=self._robot_ns)
         self._group.set_planner_id("RRT")
+        self._group.set_planning_time(99)
 
         self._display_trajectory_publisher = rospy.Publisher(
             self._robot_ns + '/move_group/display_planned_path', moveit_msgs.msg.DisplayTrajectory, queue_size=1)
@@ -202,9 +203,17 @@ class Ur5Controller(object):
             flag_success = self.set_joint_angles(arg_list_joint_angles)
             rospy.logwarn("attempts: {}".format(number_attempts))
             # self.clear_octomap()
+        return flag_success
+
+    def save_prev_path(self, arg_file_path, file_name):
+        file_path = arg_file_path + file_name + ".yaml"
+        with open(file_path, 'w') as file_save:
+            yaml.dump(self._computed_plan, file_save, default_flow_style=True)
+
+        rospy.loginfo("File saved at: {}".format(file_path))
 
     def play_saved_path(self, arg_file_path, arg_file_name):
-        file_path = arg_file_path + arg_file_name
+        file_path = arg_file_path + arg_file_name + ".yaml"
 
         with open(file_path, 'r') as file_open:
             loaded_plan = yaml.load(file_open)
@@ -223,16 +232,16 @@ class Ur5Controller(object):
             rospy.logwarn("attempts: {}".format(number_attempts))
             # self.clear_octomap()
 
-        return True
+        return flag_success
 
     def go_to_predefined_pose(self, arg_pose_name):
         rospy.loginfo(
             '\033[94m' + "Going to Pose: {}".format(arg_pose_name) + '\033[0m')
 
         self._group.set_named_target(arg_pose_name)
-        plan = self._group.plan()
+        self._computed_plan = self._group.plan()
         goal = moveit_msgs.msg.ExecuteTrajectoryGoal()
-        goal.trajectory = plan
+        goal.trajectory = self._computed_plan
         self._exectute_trajectory_client.send_goal(goal)
         self._exectute_trajectory_client.wait_for_result()
         rospy.loginfo(
@@ -260,7 +269,7 @@ class Ur5Controller(object):
         waypoints.append(copy.deepcopy(wpose))
 
         # 5. Compute Cartesian Path connecting the waypoints in the list of waypoints
-        (plan, _) = self._group.compute_cartesian_path(
+        (self._computed_plan, _) = self._group.compute_cartesian_path(
             waypoints,   # waypoints to follow
             0.01,        # Step Size, distance between two adjacent computed waypoints will be 1 cm
             0.0)         # Jump Threshold
@@ -268,13 +277,13 @@ class Ur5Controller(object):
 
         # The reason for deleting the first two waypoints from the computed Cartisian Path can be found here,
         # https://answers.ros.org/question/253004/moveit-problem-error-trajectory-message-contains-waypoints-that-are-not-strictly-increasing-in-time/?answer=257488#post-id-257488
-        num_pts = len(plan.joint_trajectory.points)
+        num_pts = len(self._computed_plan.joint_trajectory.points)
         if num_pts >= 3:
-            del plan.joint_trajectory.points[0]
-            del plan.joint_trajectory.points[1]
+            del self._computed_plan.joint_trajectory.points[0]
+            del self._computed_plan.joint_trajectory.points[1]
 
         # 6. Make the arm follow the Computed Cartesian Path
-        return self._group.execute(plan)
+        return self._group.execute(self._computed_plan)
 
     def gripper(self, box_name, val):
         if val is True:

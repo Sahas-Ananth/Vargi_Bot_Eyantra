@@ -1,2 +1,3 @@
 .vscode
 dummy/
+pkg_task4/scripts/*.pyc

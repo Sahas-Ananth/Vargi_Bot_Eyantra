@@ -4,7 +4,7 @@ import rospy
 import actionlib
 import tf2_ros
 
-from pkg_task4.msg import task4Action, task4ActionResult
+from pkg_task4.msg import task4Action, task4Result
 from ConveyorControl import Conveyor
 from UR5Controls import Ur5Controller
 from geometry_msgs.msg import PoseStamped
@@ -17,24 +17,21 @@ class Sorter(object):
         rospy.init_node("Node_Task4_Sorter_control")
         # Reference frames used in TF
         self._ref_frame = "logical_camera_2_{}_frame"
-        self._target_frame = "ur5_ee_link"
+        self._target_frame = "ur5_2_tf/ur5_ee_link"
 
         # Offset to be maintained from the package to properly
         # pickup the object
         self._delta = 0.11  # vacuum_gripper_width + (box_length/2)
 
         # UR5 control instance
-        self._ur5 = Ur5Controller("ur5_1")
+        self._ur5 = Ur5Controller("ur5_2")
         # TF instance
         self._tf = TF()
         # Instance to control the conveyor belt
         self._conveyor = Conveyor()
 
-        self._sas = actionlib.SimpleActionServer("/ur5_pkg_sorter",
-                                                 task4Action,
-                                     
-            execute_cb=self.on_goal,
-                                                 auto_start=False)
+        self._sas = actionlib.SimpleActionServer(
+            "/ur5_pkg_sorter", task4Action, execute_cb=self.on_goal, auto_start=False)
         while not self._ur5.set_joint_angles(ur5_new_starting_angles) and not rospy.is_shutdown():
             rospy.sleep(0.5)
         rospy.sleep(1)
@@ -50,14 +47,11 @@ class Sorter(object):
                   *packagen{1, 2, 3}*.
         """
         if colour == "red":
-            return gazebo_red_bin_angles
+            return self._ur5.hard_set_joint_angles(gazebo_red_bin_angles, 3)
         elif colour == "yellow":
-            # The same angles have been used from previous task hence different name
-            return gazebo_green_bin_angles
+            return self._ur5.hard_set_joint_angles(gazebo_yellow_bin_angles, 3)
         elif colour == "green":
-            # The same angles have been used from previous task hence different name
-            return gazebo_blue_bin_angles
-        return None
+            return self._ur5.hard_set_joint_angles(gazebo_green_bin_angles, 3)
 
     def on_goal(self, obj_msg_goal):
         """
@@ -82,7 +76,7 @@ class Sorter(object):
         trans_z = -trans.transform.translation.z + self._delta
 
         # Send Result to the Client
-        obj_msg_result = task4ActionResult()
+        obj_msg_result = task4Result()
 
         tries = 3
         while tries > 0 and not self._ur5.ee_cartesian_translation(trans_x, trans_y, trans_z) and not rospy.is_shutdown():
@@ -107,12 +101,21 @@ class Sorter(object):
         self._ur5.add_box(package_name, pose, box_length, 0.5)
         self._ur5.gripper(package_name, True)
 
-        while not self._ur5.set_joint_angles(self._get_bin(package_colour)) and not rospy.is_shutdown():
+        while not self._get_bin(package_colour) and not rospy.is_shutdown():
             rospy.sleep(0.5)
 
         self._ur5.gripper(package_name, False)
         self._ur5.remove_box(package_name, 0.5)
+        self._ur5.set_joint_angles(ur5_new_starting_angles)
 
         rospy.logdebug('\033[33;1mSending result back to client\033[0m')
         obj_msg_result.success = True
         self._sas.set_succeeded(obj_msg_result)
+
+
+if __name__ == '__main__':
+    try:
+        Sorter()
+        rospy.spin()
+    except rospy.KeyboardInterrupt:
+        rospy.loginfo("Closing")
