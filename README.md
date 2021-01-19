@@ -46,7 +46,7 @@ Thanks to the following people who have contributed to this project:
 
 * [@Sahasrajit A.](https://github.com/Sahas-Ananth) 💻
 * [@Nitheesh Babu G.S.](https://github.com/gs-niteesh) 💻
-* [@Vishal Balaji](https://github.com/The-SocialLion) 💻
+* [@Vishal Balaji Sivaraman](https://github.com/The-SocialLion) 💻
 * [@Promoth N](https://github.com/pro-07)💻
 
 ## Contact
