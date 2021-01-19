@@ -41,17 +41,15 @@ class Camera1:
                 area1=cv2.contourArea(c)
                 if area1:
                         return "Yellow"
-                        break
+                
         for c in cnts2:
                 area2=cv2.contourArea(c)
                 if area2:
                         return "Green"
-                        break
         for c in cnts3:
                 area3=cv2.contourArea(c)
                 if area3:
                         return "Red"
-                        break
   
   def callback(self,data):
     try:
