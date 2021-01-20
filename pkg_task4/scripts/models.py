@@ -9,7 +9,9 @@ import geometry_msgs.msg
 
 ur5_starting_angles = [0.1026, -139.13, -39.04, -91.14, 90.005, 179.35]
 
-ur5_new_starting_angles = [0.711, -141.987, -49.982, -81.277, 89.623, 179.99]
+# ur5_new_starting_angles = [0.711, -141.987, -49.982, -81.277, 89.623, 179.99]
+ur5_new_starting_angles = [0.706232802096, -141.981689307, -
+                           49.9858133044, -81.2825158746, 89.6194706419, 179.984754632]
 
 ur5_green_box_angles = [-0.0427, -121.54, -85, -62.77, 90.012, 179.215]
 
@@ -80,31 +82,30 @@ packagen20_angles = [-59.3337761701, -99.9485203319,
                      90.8040200235, 11.2727008002, 116.552409852, -2.20988577574]
 packagen21_angles = [125.532011493, -59.7151234418, -
                      129.594446118, 9.12204955794, 55.196133377, -86.6265769885]
-packagen22_angles = []
+packagen22_angles = [-160.9144984, 12.3438320697, -
+                     116.097055028, -76.5067822477, -18.356695945, -86.5154563036]
 
-packagen30_angles = [-53.2580995235, -96.6104012757,
-                     81.06233691, -164.005477866, -126.002684119, -86.4607748888]
-packagen31_angles = [-122.734825794, -118.044029398,
-                     96.6353275631, -156.500303241, -56.4404181573, -87.8650948306]
+packagen30_angles = []
+packagen31_angles = []
 packagen32_angles = []
 
 
-pkg_colours = {"packagen00": "red",
-               "packagen01": "green",
-               "packagen02": "yellow",
+# pkg_colours = {"packagen00": "red",
+#                "packagen01": "green",
+#                "packagen02": "yellow",
 
-               "packagen10": "green",
-               "packagen11": "yellow",
-               "packagen12": "red",
+#                "packagen10": "green",
+#                "packagen11": "yellow",
+#                "packagen12": "red",
 
-               "packagen20": "yellow",
-               "packagen21": "red",
-               "packagen22": "green",
+#                "packagen20": "yellow",
+#                "packagen21": "red",
+#                "packagen22": "green",
 
-               "packagen30": "red",
-               "packagen31": "yellow",
-               "packagen32": "green"
-               }
+#                "packagen30": "red",
+#                "packagen31": "yellow",
+#                "packagen32": "green"
+#                }
 
 
 def debug(f):

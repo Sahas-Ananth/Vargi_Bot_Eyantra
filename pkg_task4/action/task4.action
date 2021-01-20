@@ -2,6 +2,7 @@
 string package_name
 string colour
 geometry_msgs/Pose package_pose
+geometry_msgs/Pose ur5_pose
 ---
 # result
 bool success

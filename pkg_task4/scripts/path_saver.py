@@ -9,16 +9,16 @@ from models import *
 
 
 # [0.706232802096, -141.981689307, -49.9858133044, -81.2825158746, 89.6194706419, 179.984754632]
-# TODO: packagen02 --> home, packagen20 --> home (crash with shelf), packagen21-->home (check collisions)
-# TODO: home --> packagen22 (Collision)
+# TODO: home <--> packagen{22,30,31,32}
 
 
 def package2home(package_name, robot):
-    joint_values = [0.706232802096, -141.981689307, -
-                    49.9858133044, -81.2825158746, 89.6194706419, 179.984754632]
+    # joint_values = ur5_new_starting_angles
+    joint_values = ur5_starting_angles
     robot.gripper(package_name, True)
     file_name = "{}_{}_to_home".format(sys.argv[1], package_name)
     robot.hard_set_joint_angles(joint_values, 3)
+    # robot.go_to_pose(ur5_starting_pose)
     robot.save_prev_path(robot._file_path, file_name)
     robot.gripper(package_name, False)
     robot.remove_box(package_name)
@@ -34,17 +34,17 @@ def home2package(joint_angle_list, package_name, robot):
 def main():
     rospy.init_node("Path_Saver")
     robot = Ur5Controller(sys.argv[1])
-    joint_angles = [-160.9144984, 12.3438320697, -
-                    116.097055028, -76.5067822477, -18.356695945, -86.5154563036]
-    name = "packagen22"
-    home2package(joint_angles, name, robot)
-    # package2home(name, robot)
+    joint_angles = packagen21_angles
+    name = "packagen21"
+    # home2package(joint_angles, name, robot)
+    package2home(package_name=name, robot=robot)
 
     rospy.loginfo("Done.")
 
 
 if __name__ == '__main__':
+    main()
     try:
-        main()
+        rospy.spin()
     except KeyboardInterrupt:
         rospy.loginfo("Closing...")

@@ -1,10 +1,5 @@
 #!/usr/bin/env python
 
-# TODO:
-# """
-# Colours supposed to be sent in form of a queue
-# """
-
 import rospy
 import actionlib
 
@@ -13,9 +8,6 @@ from pkg_task4.msg import task4Goal
 from hrwros_gazebo.msg import LogicalCameraImage
 from ConveyorControl import Conveyor
 from models import *
-from colour_detection import Camera1
-from colour_detection import sort_by_x
-from colour_detection import sort_by_y
 
 
 class Camera(object):
@@ -31,9 +23,10 @@ class Camera(object):
 
         self.conveyor = Conveyor()
 
-        self.camera2d = Camera1()
+        # self.camera2d = Camera1()
 
-        self.package_colours = self.camera2d.packages
+        # self.package_colours = self.camera2d.packages
+        self.package_colours = pkg_colours
 
         rospy.loginfo("Colour of packages: {}\n".format(self.package_colours))
 
@@ -48,13 +41,13 @@ class Camera(object):
             '\033[34;1m' + "Camera: Simple Action Server up." + '\033[0m')
 
         # Start the conveyor
-        self.conveyor.set_power(70)
+        self.conveyor.set_power(100)
 
         self.camera = rospy.Subscriber("/eyrc/vb/logical_camera_2",
                                        LogicalCameraImage, self.process_frame,
                                        queue_size=1)
 
-    def send_goal(self, name, colour, pose):
+    def send_goal(self, name, colour, package_pose, robot_pose):
         """
             Sends the goal to the UR5 controller on detecting
             a package in pickable range.
@@ -62,12 +55,13 @@ class Camera(object):
             the controller. But for future proof we also send
             the pose.
         """
-        goal = task4Goal(package_name=name, colour=colour, package_pose=pose)
+        goal = task4Goal(package_name=name, colour=colour,
+                         package_pose=package_pose, ur5_pose=robot_pose)
 
         self.simple_client.send_goal(goal, done_cb=self._done_callback,
                                      feedback_cb=self._feedback_callback)
         rospy.loginfo('\033[34;1m' +
-                      "Goal: name = {}\nColour: {}\npose = {} sent.".format(name, colour, str(pose)) + '\033[0m')
+                      "Goal: name = {}\nColour: {}\nPackage_Pose = {}\nRobot_pose = {} sent.".format(name, colour, str(package_pose), str(robot_pose)) + '\033[0m')
 
     def _done_callback(self, _status, result):
         self.processing = False
@@ -75,7 +69,7 @@ class Camera(object):
         if result.success is True:
             self.processed.append(self.current_package)
             if len(self.processed) != 9:
-                self.conveyor.set_power(70)
+                self.conveyor.set_power(100)
         else:
             self.conveyor.set_power(25)
             rospy.sleep(1)
@@ -90,6 +84,7 @@ class Camera(object):
             package that is in pickable range and sending the goal
             to the ur5 controller.
         """
+        last_ur5_pose = []
         if self.processing:
             return
 
@@ -103,6 +98,7 @@ class Camera(object):
         current_packages = []
         for model in models:
             if model.type == "ur5":
+                last_ur5_pose.append(model)
                 continue
             if model.type not in self.processed:
                 current_packages.append(model)
@@ -117,8 +113,8 @@ class Camera(object):
         if pos_y >= 0.10 and pos_y <= 0.20:
             self.conveyor.stop()
             self.send_goal(current_packages[0].type,
-                           pkg_colours[current_packages[0].type],
-                           current_packages[0].pose)
+                           self.package_colours[current_packages[0].type],
+                           current_packages[0].pose, last_ur5_pose[0].pose)
             self.current_package = current_packages[0].type
             self.processing = True
             return

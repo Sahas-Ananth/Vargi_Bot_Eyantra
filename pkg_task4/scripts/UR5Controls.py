@@ -56,7 +56,8 @@ class Ur5Controller(object):
         self._gripper = rospy.ServiceProxy(
             name=self._gripper_service_name, service_class=vacuumGripper)
 
-        rospy.loginfo('\033[94m' + "Gripper active" + '\033[0m')
+        rospy.loginfo(
+            '\033[94m' + "{} Gripper active".format(arg_robot_name) + '\033[0m')
 
         # Attribute to store computed trajectory by the planner
         self._computed_plan = ""
@@ -132,7 +133,7 @@ class Ur5Controller(object):
     def attach_box(self, box_name, timeout=4):
         robot = self._robot
         scene = self._scene
-        eef_link = "vacuum_gripper_link"  # ! Might not work check later
+        eef_link = "vacuum_gripper_link"
 
         grasping_group = self._planning_group
         touch_links = robot.get_link_names(group=grasping_group)

@@ -8,10 +8,11 @@ from models import *
 def main():
     rospy.init_node("dummy")
     robot = Ur5Controller("ur5_1")
-    robot.hard_set_joint_angles([-160.9144984, 12.3438320697, -
-                                 116.097055028, -76.5067822477, -18.356695945, -86.5154563036], 3)
-    # robot.hard_set_joint_angles([0.706232802096, -141.981689307, -
-    #                              49.9858133044, -81.2825158746, 89.6194706419, 179.984754632], 3)
+    # robot.hard_set_joint_angles(packagen02_angles, 3)
+    # robot.gripper("packagen02", True)
+    # robot.hard_play_saved_path(
+    # robot._file_path, "ur5_1_packagen02_to_intermediate_pose", 3)
+    robot.hard_set_joint_angles(ur5_new_starting_angles, 3)
 
 
 if __name__ == '__main__':
