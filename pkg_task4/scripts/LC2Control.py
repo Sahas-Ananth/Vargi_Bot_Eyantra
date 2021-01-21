@@ -8,6 +8,7 @@ from pkg_task4.msg import task4Goal
 from hrwros_gazebo.msg import LogicalCameraImage
 from ConveyorControl import Conveyor
 from models import *
+from qr import *
 
 
 class Camera(object):
@@ -23,10 +24,10 @@ class Camera(object):
 
         self.conveyor = Conveyor()
 
-        # self.camera2d = Camera1()
+        self.camera2d = Camera1()
 
-        # self.package_colours = self.camera2d.packages
-        self.package_colours = pkg_colours
+        self.package_colours = self.camera2d.packages
+        # self.package_colours = pkg_colours
 
         rospy.loginfo("Colour of packages: {}\n".format(self.package_colours))
 
@@ -125,6 +126,7 @@ def main():
         Instantiates a rospy node and Camera object.
     """
     rospy.init_node("Logical_camera2_control")
+    rospy.sleep(10)
 
     Camera()
 

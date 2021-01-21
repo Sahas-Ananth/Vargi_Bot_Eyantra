@@ -17,11 +17,14 @@
 
     <!-- Run Task-4 sorting ROS Nodes -->
 
-    <!-- This node controls the UR5 robot using moveit commander -->
-    <!-- <node name= "node_t3_ur5_control" pkg= "pkg_task3" type="node_t3_ur5_control.py" output="screen"/> -->
+    <!-- This node controls the UR5 robot which picks and places the packages on the conveyer belt using moveit commander -->
+    <node name= "Task4_Picker_Control" pkg= "pkg_task4" type="UR5_package_picker.py" output="screen"/>  
     
     <!-- This node gets the TF of the package and sends it to the UR5 moveit planner -->
-    <!-- <node name= "node_t3_camera_control" pkg= "pkg_task3" type="node_t3_camera_control.py" output="screen"/> -->
+    <node name= "Task4_Logical_Camera_Control" pkg= "pkg_task4" type="LC2Control.py" output="screen"/>
+
+    <!-- This node controls the UR5 robot which sorts the incoming packages according to its colour using moveit commander -->
+    <node name= "Task4_Sorter_Control" pkg= "pkg_task4" type="UR5_package_picker.py" output="screen"/>
     
     <!-- Recording Bag File for Submission -->
     <arg name="record" default="false"/>
@@ -29,7 +32,7 @@
 
     <group if="$(arg record)">
         <node name="rosbag_record_pick" pkg="rosbag" type="record"
-                args="record -O $(find pkg_task4)/bag_files/$(arg rec_name) --chunksize=10 /eyrc/vb/ur5_1/vacuum_gripper/logical_camera/ur5_1" output="screen"/>
+                args="record -O $(find pkg_task4)/bag_files/$(arg rec_name) /eyrc/vb/ur5_1/vacuum_gripper/logical_camera/ur5_1 /eyrc/vb/ur5_2/vacuum_gripper/logical_camera/ur5_2" output="screen"/>
     </group>
 
 

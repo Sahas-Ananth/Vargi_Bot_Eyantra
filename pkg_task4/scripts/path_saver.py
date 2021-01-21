@@ -9,12 +9,12 @@ from models import *
 
 
 # [0.706232802096, -141.981689307, -49.9858133044, -81.2825158746, 89.6194706419, 179.984754632]
-# TODO: home <--> packagen{22,30,31,32}
+#! packagen30 --> home (Possible Collision), packagen31 --> home (Collision), 
 
 
 def package2home(package_name, robot):
-    # joint_values = ur5_new_starting_angles
-    joint_values = ur5_starting_angles
+    joint_values = ur5_new_starting_angles
+    # joint_values = ur5_starting_angles
     robot.gripper(package_name, True)
     file_name = "{}_{}_to_home".format(sys.argv[1], package_name)
     robot.hard_set_joint_angles(joint_values, 3)
@@ -34,8 +34,8 @@ def home2package(joint_angle_list, package_name, robot):
 def main():
     rospy.init_node("Path_Saver")
     robot = Ur5Controller(sys.argv[1])
-    joint_angles = packagen21_angles
-    name = "packagen21"
+    joint_angles = packagen22_angles
+    name = "packagen22"
     # home2package(joint_angles, name, robot)
     package2home(package_name=name, robot=robot)
 

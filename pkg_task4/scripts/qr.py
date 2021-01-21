@@ -31,7 +31,7 @@ class Camera1:
         sharpeningKernel = np.array(
             ([0, -1, 0], [-1, 5, -1], [0, -1, 0]), dtype="int")
         sharpen_img_1 = cv2.filter2D(img, -1, filt)
-        cv2.imshow("sharpned image", sharpen_img_1)
+        cv2.imshow("sharpend image", sharpen_img_1)
         return sharpen_img_1
 
     def increase_brightness(self, image):
@@ -183,7 +183,7 @@ class Camera1:
         boxes, grps = self.get_qr_data(cv_image)
 
         box_name = self.name_boxes(boxes)
-        print (self.box_name_to_dict(box_name))
+        self.packages = self.box_name_to_dict(box_name)
 
         for (x, y, w, h, col) in boxes:
             cv2.rectangle(cv_image, (x, y), (x + w, y + h), (0, 0, 0), 5)

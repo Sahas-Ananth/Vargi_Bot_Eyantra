@@ -32,7 +32,7 @@ class Sorter(object):
 
         self._sas = actionlib.SimpleActionServer(
             "/ur5_pkg_sorter", task4Action, execute_cb=self.on_goal, auto_start=False)
-        while not self._ur5.hard_play_saved_path(self._ur5._file_path, "all0tohome", 3) and not rospy.is_shutdown():
+        while not self._ur5.hard_set_joint_angles(ur5_new_starting_angles, 3) and not rospy.is_shutdown():
             rospy.sleep(0.5)
         rospy.sleep(1)
 
@@ -125,6 +125,7 @@ class Sorter(object):
 
 if __name__ == '__main__':
     try:
+        rospy.sleep(10)
         Sorter()
         rospy.spin()
     except KeyboardInterrupt:
