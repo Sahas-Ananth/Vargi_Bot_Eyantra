@@ -69,6 +69,7 @@ find_package(catkin REQUIRED COMPONENTS
 add_action_files(
    FILES
    task4.action
+   DetectPackages.action
 )
 
 ## Generate added messages and services with any dependencies listed here

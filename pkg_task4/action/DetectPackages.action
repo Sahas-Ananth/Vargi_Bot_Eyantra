@@ -1,0 +1,8 @@
+# Goal
+uint32 not_used_goal
+---
+# Result
+string packages
+---
+# Feedback
+bool not_used_feedback
