@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 import rospy
 from models import *
-from qr import *
 from UR5Controls import Ur5Controller
+from DetectedPackages import DetectedPackages
 
 
 class picker(object):
     def __init__(self):
         rospy.init_node("Node_Task4_Picker_control")
         self._ur5 = Ur5Controller("ur5_1")
+        self.detected_packages = DetectedPackages()
         while not self._ur5.hard_set_joint_angles(ur5_new_starting_angles, 3) and not rospy.is_shutdown():
             rospy.sleep(0.5)
         rospy.sleep(1)
@@ -28,35 +29,29 @@ class picker(object):
         self._ur5.remove_box(package_name, 0.5)
         return result
 
+    def run(self):
+        pickable_packages = self.detected_packages.get_packages()
+        rospy.loginfo("\033[94mPickable_packages = \n{}\n \033[0m".format(
+            str(pickable_packages)))
+        # robot.go_to_package("packagen22")
+        # robot.go_home("packagen22")
+        # robot.go_to_package("packagen21")
+        # robot.go_home("packagen21")
+        # pickable_packages = pkg_colours
 
-def main():
-    rospy.sleep(10)
-    camera = Camera1()
-    robot = picker()
-    package = "packagen{}{}"
-    pickable_packages = camera.packages.keys()
-    rospy.loginfo("\033[94mPickable_packages = \n{}\n \033[0m".format(
-        str(pickable_packages)))
-    # robot.go_to_package("packagen22")
-    # robot.go_home("packagen22")
-    # robot.go_to_package("packagen21")
-    # robot.go_home("packagen21")
-    # pickable_packages = pkg_colours
-
-    for i in range(3):
-        for j in range(3):
-            package_name = package.format(str(i), str(j))
-            if package_name in pickable_packages:
-                rospy.loginfo(
-                    "\033[32;1mUR51: Going to pickup {}\033[0m".format(package_name))
-                robot.go_to_package(package_name)
-                rospy.loginfo(
-                    "\033[32;1mUR51: Going to drop {}\033[0m".format(package_name))
-                robot.go_home(package_name)
-                robot._ur5.hard_set_joint_angles(ur5_new_starting_angles, 3)
-            else:
-                continue
+        for package_name, _ in pickable_packages.items():
+            rospy.loginfo(
+                "\033[32;1mUR51: Going to pickup {}\033[0m".format(package_name))
+            self.go_to_package(package_name)
+            rospy.loginfo(
+                "\033[32;1mUR51: Going to drop {}\033[0m".format(package_name))
+            self.go_home(package_name)
+            self._ur5.hard_set_joint_angles(ur5_new_starting_angles, 3)
+            break
 
 
 if __name__ == "__main__":
-    main()
+    pick = picker()
+    pick.run()
+    rospy.loginfo("Picker: Picked all packages")
+    rospy.spin()
