@@ -1,37 +1,57 @@
 #!/usr/bin/env python
 
-import rospy
-import cv2
-import copy
-from std_msgs.msg import String
-from sensor_msgs.msg import Image
-from cv_bridge import CvBridge, CvBridgeError
+"""
+This module detects the colour of the package using the QR code
+and stores this information. Which is then accessed by the
+UR5 sorter node to put the boxes in the correct position.
+"""
 import numpy as np
 
 from pyzbar.pyzbar import decode
 
+import cv2
+from cv_bridge import CvBridge, CvBridgeError
 
-def sort_by_x(e):
-    return e.rect[0]
+import rospy
+import actionlib
+from sensor_msgs.msg import Image
+from pkg_task4.msg import DetectPackagesAction, DetectPackagesResult
 
+DEBUG_SHOW_IMAGE = False
 
-def sort_by_y(e):
-    return e.rect[1]
+def sort_by_x(obj):
+    return obj.rect[0]
 
+def sort_by_y(obj):
+    return obj.rect[1]
 
-class Camera1:
+def show_image(title, image):
+    if DEBUG_SHOW_IMAGE:
+        cv2.imshow(title, image)
+
+class Camera1(object):
     def __init__(self):
         self.bridge = CvBridge()
+
         self.image_sub = rospy.Subscriber(
             "/eyrc/vb/camera_1/image_raw", Image, self.callback)
+        self.action_server = actionlib.SimpleActionServer('camera_1_detect_packages',
+                                                          DetectPackagesAction,
+                                                          self.detect_packages,
+                                                          False)
+
+        self.MAX_TRY = 5
+        self.GAMMA = 0.9
         self.packages = {}
+        self.data_frame = None
+
+        rospy.loginfo('QRColorDetection: SimpleActionServer started')
+        self.action_server.start()
 
     def sharpen_image(self, img):
         filt = np.array([[-1, -1, -1], [-1, 9, -1], [-1, -1, -1]])
-        sharpeningKernel = np.array(
-            ([0, -1, 0], [-1, 5, -1], [0, -1, 0]), dtype="int")
         sharpen_img_1 = cv2.filter2D(img, -1, filt)
-        cv2.imshow("sharpend image", sharpen_img_1)
+        show_image("sharpend image", sharpen_img_1)
         return sharpen_img_1
 
     def increase_brightness(self, image):
@@ -47,12 +67,10 @@ class Camera1:
 
         return new_image
 
-    def increase_brightness2(self, image):
+    def increase_brightness2(self, image, gamma = 0.5):
         """
-            Best gamma value for res of 600 x 1000 is 0.5
+            Gamma correct the image
         """
-        gamma = 0.9
-
         lookUpTable = np.empty((1, 256), np.uint8)
         for i in range(256):
             lookUpTable[0, i] = np.clip(pow(i / 255.0, gamma) * 255.0, 0, 255)
@@ -69,27 +87,9 @@ class Camera1:
     def get_qr_data(self, arg_image):
         qr_result = decode(arg_image)
 
-        grps = []
-        if (len(qr_result) > 0):
-            # NOTE: The below method to group the packages by row and col assumes
-            # all packages has been detected. In case any packages goes missing
-            # the below method will not give the correct grouping.
-            qr_result.sort(key=sort_by_y)
-
-            i = 1
-            row = []
-            for qr in qr_result:
-                row.append(qr)
-                if i % 3 == 0:
-                    i = 0
-                    row.sort(key=sort_by_x)
-                    grps.append(row)
-                    row = []
-
-                i += 1
-
+        qr_result.sort(key=sort_by_y)
         boxes = self._get_borders(qr_result)
-        return (boxes, grps)
+        return (boxes, len(qr_result))
 
     def sort_by_row_and_col(self, boxes):
         """ box is a array of tuples (x, y) """
@@ -100,11 +100,11 @@ class Camera1:
         i = 0
         while i < n:
             row = []
-            xi, yi, _ = boxes[i]
+            _, yi, _ = boxes[i]
             row.append(boxes[i])
             j = i + 1
             while j < n:
-                xj, yj, _ = boxes[j]
+                _, yj, _ = boxes[j]
                 if abs(yi - yj) < err:
                     row.append(boxes[j])
                 else:
@@ -119,6 +119,8 @@ class Camera1:
         return res
 
     def find_missing(self, boxes, err):
+        # NOTE: The below values have to be changed when the resolution
+        # of the image is changed.
         cols = [105, 263, 419]
 
         xs = [xi for xi, _, _ in boxes]
@@ -135,7 +137,7 @@ class Camera1:
 
     def name_boxes(self, boxes):
         rows = []
-        for (x, y, w, h, col) in boxes:
+        for (x, y, _, _, col) in boxes:
             rows.append((x, y, col))
 
         err = 7
@@ -143,7 +145,7 @@ class Camera1:
         rows = self.sort_by_row_and_col(rows)
 
         res = []
-        for i, row in enumerate(rows):
+        for row in rows:
             if len(row) == 3:
                 res.append(row)
                 continue
@@ -165,6 +167,13 @@ class Camera1:
         return boxes
 
     def callback(self, data):
+        self.data_frame = data
+
+    def detect_packages(self, goal):
+        while self.data_frame is None:
+            rospy.sleep(0.5)
+
+        data = self.data_frame
         try:
             cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
         except CvBridgeError as e:
@@ -172,40 +181,58 @@ class Camera1:
 
         cv_image = cv2.resize(cv_image, (600, 1000))
 
-        rospy.loginfo('Increasing brightness')
-        cv_image = self.increase_brightness2(cv_image)
-        cv2.imshow('gamma correction', cv_image)
+        while self.MAX_TRY > 0:
+            rospy.loginfo('QRColorDetection: Gamma correcting the image')
+            cv_image = self.increase_brightness2(cv_image, self.GAMMA)
+            show_image('gamma correction', cv_image)
 
-        rospy.loginfo('Sharpening image')
-        cv_image = self.sharpen_image(cv_image)
+            rospy.loginfo('QRColorDetection: Sharpening image')
+            cv_image = self.sharpen_image(cv_image)
 
-        rospy.loginfo('Decoding image')
-        boxes, grps = self.get_qr_data(cv_image)
+            rospy.loginfo('QRColorDetection: Decoding image')
+            boxes, npackages = self.get_qr_data(cv_image)
+            rospy.loginfo('QRColorDetection: Found {} packages'.format(npackages))
+
+            if npackages >= 9:
+                break
+            rospy.loginfo('QRColorDetection: Less than 9 packages detected trying again')
+
+            self.MAX_TRY -= 1
+            self.GAMMA -= 1
+
+        if self.MAX_TRY <= 0:
+            rospy.logerr('QRColorDetection: Detection of atleast 9 packages failed')
 
         box_name = self.name_boxes(boxes)
+
         self.packages = self.box_name_to_dict(box_name)
+        rospy.loginfo('Detected the following packages: ' + str(self.packages))
 
-        for (x, y, w, h, col) in boxes:
-            cv2.rectangle(cv_image, (x, y), (x + w, y + h), (0, 0, 0), 5)
+        result = DetectPackagesResult()
+        result.packages = str(self.packages)
+        rospy.loginfo("QRColorDetection: send goal result to client")
+        self.action_server.set_succeeded(result)
 
-        self.image_sub.unregister()
-        cv2.imshow('Image', cv_image)
-        print (self.packages)
-        cv2.waitKey(0)
-    sharpeningKernel = np.array(
-        ([0, -1, 0], [-1, 5, -1], [0, -1, 0]), dtype="int")
+        if DEBUG_SHOW_IMAGE:
+            for (x, y, w, h, _) in boxes:
+                cv2.rectangle(cv_image, (x, y), (x + w, y + h), (0, 0, 0), 5)
+
+        show_image('Final Image', cv_image)
+        if DEBUG_SHOW_IMAGE:
+            cv2.waitKey(0)
 
 
 def main():
     rospy.init_node('node_eg3_qr_decode', anonymous=True)
-    ic = Camera1()
+    c1 = Camera1()
 
     try:
         rospy.spin()
     except KeyboardInterrupt:
         rospy.loginfo("Shutting down")
 
-    cv2.destroyAllWindows()
+    if DEBUG_SHOW_IMAGE:
+        cv2.destroyAllWindows()
 
 
 if __name__ == '__main__':
