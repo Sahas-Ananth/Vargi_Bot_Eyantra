@@ -42,7 +42,7 @@ class Camera1(object):
 
         self.MAX_TRY = 5
         self.GAMMA = 0.9
-        self.packages = {}
+        self.packages = []
         self.data_frame = None
 
         rospy.loginfo('QRColorDetection: SimpleActionServer started')
@@ -156,13 +156,13 @@ class Camera1(object):
 
         return res
 
-    def box_name_to_dict(self, rows):
-        boxes = {}
+    def box_name_to_list(self, rows):
+        boxes = []
         for i, row in enumerate(rows):
             for j, col in enumerate(row):
                 if col is None:
                     continue
-                boxes['packagen{}{}'.format(i, j)] = col[2]
+                boxes.append('packagen{}{}={}'.format(i, j, col[2]))
 
         return boxes
 
@@ -205,7 +205,7 @@ class Camera1(object):
 
         box_name = self.name_boxes(boxes)
 
-        self.packages = self.box_name_to_dict(box_name)
+        self.packages = self.box_name_to_list(box_name)
         rospy.loginfo('Detected the following packages: ' + str(self.packages))
 
         result = DetectPackagesResult()
@@ -224,7 +224,7 @@ class Camera1(object):
 
 def main():
     rospy.init_node('node_eg3_qr_decode', anonymous=True)
-    c1 = Camera1()
+    Camera1()
 
     try:
         rospy.spin()

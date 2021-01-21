@@ -5,6 +5,22 @@ import actionlib
 
 from pkg_task4.msg import DetectPackagesAction, DetectPackagesGoal
 
+def list_to_dict(packages):
+    # Remove the end brackets
+    packages = packages[1:-2]
+    p_list = packages.split(',')
+
+    # Strip whitespaces and remove the starting and ending quotes
+    stripped = [p.strip()[1:-1] for p in p_list]
+
+    packages = {}
+
+    for package in stripped:
+        name, col = package.split('=')
+        packages[name] = col
+
+    return packages
+
 class DetectedPackages(object):
     def __init__(self):
         self.client = actionlib.SimpleActionClient('camera_1_detect_packages',
@@ -21,7 +37,7 @@ class DetectedPackages(object):
         self.client.send_goal(goal, done_cb=self.done_cb)
         self.client.wait_for_result()
 
-        return self.packages
+        return list_to_dict(self.packages)
 
 if __name__ == '__main__':
     rospy.init_node('node_detect_package')
