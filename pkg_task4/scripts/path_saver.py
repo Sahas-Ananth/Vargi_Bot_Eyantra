@@ -8,10 +8,6 @@ import yaml
 from models import *
 
 
-# [0.706232802096, -141.981689307, -49.9858133044, -81.2825158746, 89.6194706419, 179.984754632]
-#! packagen30 --> home (Possible Collision), packagen31 --> home (Collision), 
-
-
 def package2home(package_name, robot):
     joint_values = ur5_new_starting_angles
     # joint_values = ur5_starting_angles
@@ -34,8 +30,8 @@ def home2package(joint_angle_list, package_name, robot):
 def main():
     rospy.init_node("Path_Saver")
     robot = Ur5Controller(sys.argv[1])
-    joint_angles = packagen22_angles
-    name = "packagen22"
+    joint_angles = packagen32_angles
+    name = "packagen32"
     # home2package(joint_angles, name, robot)
     package2home(package_name=name, robot=robot)
 
