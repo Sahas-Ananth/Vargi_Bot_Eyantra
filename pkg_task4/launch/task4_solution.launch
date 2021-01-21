@@ -24,7 +24,7 @@
     <node name= "Task4_Logical_Camera_Control" pkg= "pkg_task4" type="LC2Control.py" output="screen"/>
 
     <!-- This node controls the UR5 robot which sorts the incoming packages according to its colour using moveit commander -->
-    <node name= "Task4_Sorter_Control" pkg= "pkg_task4" type="UR5_package_picker.py" output="screen"/>
+    <node name= "Task4_Sorter_Control" pkg= "pkg_task4" type="UR5_package_sorter.py" output="screen"/>
     
     <!-- Recording Bag File for Submission -->
     <arg name="record" default="false"/>
