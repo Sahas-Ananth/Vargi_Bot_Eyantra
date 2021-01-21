@@ -33,12 +33,8 @@ class picker(object):
         pickable_packages = self.detected_packages.get_packages()
         rospy.loginfo("\033[94mPickable_packages = \n{}\n \033[0m".format(
             str(pickable_packages)))
-        # robot.go_to_package("packagen22")
-        # robot.go_home("packagen22")
-        # robot.go_to_package("packagen21")
-        # robot.go_home("packagen21")
-        # pickable_packages = pkg_colours
 
+        picked = 0
         for package_name, _ in pickable_packages.items():
             rospy.loginfo(
                 "\033[32;1mUR51: Going to pickup {}\033[0m".format(package_name))
@@ -47,7 +43,10 @@ class picker(object):
                 "\033[32;1mUR51: Going to drop {}\033[0m".format(package_name))
             self.go_home(package_name)
             self._ur5.hard_set_joint_angles(ur5_new_starting_angles, 3)
-            break
+
+            picked += 1
+            if picked >= 10:
+                break
 
 
 if __name__ == "__main__":
