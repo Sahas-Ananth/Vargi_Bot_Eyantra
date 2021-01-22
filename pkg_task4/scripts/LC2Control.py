@@ -26,7 +26,7 @@ class Camera(object):
     """
 
     def __init__(self):
-        rospy.init_node("Logical_camera2_control")
+        rospy.init_node("node_t4_logical_camera2")
 
         # Send goals to the server on /ur5_pkg_sorted
         self.simple_client = actionlib.SimpleActionClient(
