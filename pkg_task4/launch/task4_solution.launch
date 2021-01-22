@@ -17,14 +17,17 @@
 
     <!-- Run Task-4 sorting ROS Nodes -->
 
+    <!-- This node detects the color of packages and stores them in param server -->
+    <node name= "node_t4_color_detect" pkg= "pkg_task4" type="color_detect.py" output="screen"/> 
+
     <!-- This node controls the UR5 robot which picks and places the packages on the conveyer belt using moveit commander -->
-    <node name= "Task4_Picker_Control" pkg= "pkg_task4" type="UR5_package_picker.py" output="screen"/>  
+    <node name= "node_t4_picker_control" pkg= "pkg_task4" type="UR5_package_picker.py" output="screen"/> 
     
-    <!-- This node gets the TF of the package and sends it to the UR5 moveit planner -->
-    <node name= "Task4_Logical_Camera_Control" pkg= "pkg_task4" type="LC2Control.py" output="screen"/>
+    <!-- This node gets the packages under logical camera2 and sends actions to UR5 sorted to pick them up -->
+    <node name= "node_t4_logical_camera2" pkg= "pkg_task4" type="LC2Control.py" output="screen"/>
 
     <!-- This node controls the UR5 robot which sorts the incoming packages according to its colour using moveit commander -->
-    <node name= "Task4_Sorter_Control" pkg= "pkg_task4" type="UR5_package_sorter.py" output="screen"/>
+    <node name= "node_t4_sorter_control" pkg= "pkg_task4" type="UR5_package_sorter.py" output="screen"/> -->
     
     <!-- Recording Bag File for Submission -->
     <arg name="record" default="false"/>
