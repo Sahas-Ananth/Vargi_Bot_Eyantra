@@ -1,5 +1,11 @@
 #! /usr/bin/env python
 
+"""
+This module represent an UR5 Arm and help in
+manipulation.
+Most of the code here is referenced from E-Yantra resources.
+"""
+
 import copy
 import sys
 import math

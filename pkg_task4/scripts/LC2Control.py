@@ -1,5 +1,12 @@
 #!/usr/bin/env python
 
+"""
+This modules represents the Logical Camera 2. This is
+responsible for detecting if any package is in range
+of the UR2 arm and sending commands to the arm to pick
+up the packages.
+"""
+
 import rospy
 import actionlib
 
@@ -21,6 +28,7 @@ class Camera(object):
     def __init__(self):
         rospy.init_node("Logical_camera2_control")
 
+        # Send goals to the server on /ur5_pkg_sorted
         self.simple_client = actionlib.SimpleActionClient(
             "/ur5_pkg_sorter", task4Action)
 

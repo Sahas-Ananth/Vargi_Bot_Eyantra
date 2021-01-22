@@ -1,20 +1,24 @@
 #!/usr/bin/env python
 
+"""
+This module queries the param server to see if there are any
+detected packages.
+"""
+
 import rospy
 import actionlib
-
-from pkg_task4.msg import DetectPackagesAction, DetectPackagesGoal
 
 class DetectedPackages(object):
     def __init__(self):
         self.packages = None
 
     def get_packages(self):
+        """
+        Returns a dictionary of packages detected by *Camera1* by
+        querying the param server
+        """
         while not rospy.has_param("DetectedPackages"):
             pass
-        # goal = DetectPackagesGoal()
-        # self.client.send_goal(goal, done_cb=self.done_cb)
-        # self.client.wait_for_result()
         self.packages = rospy.get_param("DetectedPackages")
 
         return self.packages

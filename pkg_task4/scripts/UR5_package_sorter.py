@@ -1,5 +1,9 @@
 #! /usr/bin/env python
 
+"""
+This module represents the UR5 Arm 2.
+"""
+
 import rospy
 import actionlib
 
@@ -12,8 +16,12 @@ from models import *
 
 
 class Sorter(object):
+    """
+    Sorted: Represents the UR5 Arm 2. Picks packages from the conveyor
+    when an action is sent from the LogicalCamer (LC2Control).
+    """
     def __init__(self):
-        rospy.init_node("Node_Task4_Sorter_control")
+        rospy.init_node("node_t4_sorter_control")
 
         # Offset to be maintained from the package to properly
         # pickup the object
@@ -27,8 +35,11 @@ class Sorter(object):
         self._conveyor = Conveyor()
         self._tf = TF()
 
+        # SimpleActionServer is used to send info about packages
+        # under Logical camera.
         self._sas = actionlib.SimpleActionServer(
             "/ur5_pkg_sorter", task4Action, execute_cb=self.on_goal, auto_start=False)
+
         while not self._ur5.hard_set_joint_angles(ur5_new_starting_angles, 3) and not rospy.is_shutdown():
             rospy.sleep(0.5)
         rospy.sleep(1)
@@ -107,6 +118,8 @@ class Sorter(object):
             self._sas.set_succeeded(obj_msg_result)
             return
 
+        # Lookup the translation of the packages w.r.t to world
+        # to add the package to scene.
         trans = self._tf.lookup_transform(
              "world", self._ref_frame.format(package_name))
 
@@ -115,6 +128,7 @@ class Sorter(object):
         pose.pose.position = trans.transform.translation
         pose.pose.orientation = trans.transform.rotation
 
+        # Add package to scene
         self._ur5.add_box(package_name, pose, box_length, 0.5)
         self._ur5.gripper(package_name, True)
         rospy.loginfo("Gripper Activated")

@@ -92,24 +92,5 @@ packagen31_angles = [-120.79769795, -117.115246557,
 packagen32_angles = [52.5776560284, -112.475159569, -
                      130.41174184, 62.716838271, 128.132401393, -86.8736397541]
 
-
-# pkg_colours = {"packagen00": "red",
-#                "packagen01": "green",
-#                "packagen02": "yellow",
-
-#                "packagen10": "green",
-#                "packagen11": "yellow",
-#                "packagen12": "red",
-
-#                "packagen20": "yellow",
-#                "packagen21": "red",
-#                "packagen22": "green",
-
-#                "packagen30": "red",
-#                "packagen31": "yellow",
-#                "packagen32": "green"
-#                }
-
-
 def debug(f):
     print (u'\u001b[36;1m' + f + u'\u001b[0m')

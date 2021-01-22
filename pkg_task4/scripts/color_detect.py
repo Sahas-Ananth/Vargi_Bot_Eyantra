@@ -2,8 +2,8 @@
 
 """
 This module detects the colour of the package using the QR code
-and stores this information. Which is then accessed by the
-UR5 sorter node to put the boxes in the correct position.
+and stores this information in the param server. Which is then
+accessed by the UR5 sorter node to put the boxes in the correct position.
 """
 import numpy as np
 
@@ -16,6 +16,7 @@ import rospy
 import actionlib
 from sensor_msgs.msg import Image
 
+# Set true to see the processed images from openCV
 DEBUG_SHOW_IMAGE = False
 
 def sort_by_x(obj):
@@ -29,6 +30,11 @@ def show_image(title, image):
         cv2.imshow(title, image)
 
 class Camera1(object):
+    """
+    Camera1: This class represents the 2D camera, it uses the QR code
+    to detect the package colors after processing the images throught
+    openCV.
+    """
     def __init__(self):
         self.bridge = CvBridge()
 
@@ -47,6 +53,9 @@ class Camera1(object):
         return sharpen_img_1
 
     def increase_brightness(self, image):
+        """
+        Manually alter the pixels (Slower function)
+        """
         alpha = 2.2
         beta = 50
 
@@ -70,6 +79,9 @@ class Camera1(object):
         return res
 
     def _get_borders(self, qr_result):
+        """
+        Get the locations of the QR Codes.
+        """
         boxes = []
         for qr in qr_result:
             (x, y, w, h) = qr.rect
@@ -77,6 +89,9 @@ class Camera1(object):
         return boxes
 
     def get_qr_data(self, arg_image):
+        """
+        Decode the image to find the QR Data.
+        """
         qr_result = decode(arg_image)
 
         qr_result.sort(key=sort_by_y)
@@ -84,7 +99,10 @@ class Camera1(object):
         return (boxes, len(qr_result))
 
     def sort_by_row_and_col(self, boxes):
-        """ box is a array of tuples (x, y) """
+        """
+        Sorts the packages to find the correct location of
+        packages that have been detected through QR Code.
+        """
         err = 2
         n = len(boxes)
         res = []
@@ -111,6 +129,10 @@ class Camera1(object):
         return res
 
     def find_missing(self, boxes, err):
+        """
+        Fills None in place of packages which couldn't be detected
+        through QR Code.
+        """
         # NOTE: The below values have to be changed when the resolution
         # of the image is changed.
         cols = [105, 263, 419]
@@ -149,6 +171,12 @@ class Camera1(object):
         return res
 
     def box_name_to_dict(self, rows):
+        """
+        Create a dictionary of detected packages.
+        Format: {
+                    "packagen01": "red"
+                }
+        """
         boxes = {}
         for i, row in enumerate(rows):
             for j, col in enumerate(row):
@@ -162,6 +190,11 @@ class Camera1(object):
         self.data_frame = data
 
     def detect_packages(self, goal = None):
+        """
+        Detect the colour of the packages using pyzbar and processing
+        the image with different brigthness. This is also saves
+        the detected packages in the param server.
+        """
         while self.data_frame is None:
             rospy.sleep(0.5)
 
@@ -173,37 +206,37 @@ class Camera1(object):
 
         cv_image = cv2.resize(cv_image, (600, 1000))
 
+        # Try different values of GAMMA if atleast 9 packages couldn't be
+        # detected.
         while self.MAX_TRY > 0:
-            rospy.loginfo('QRColorDetection: Gamma correcting the image')
+            rospy.loginfo('ColorDetect: Gamma correcting the image')
             cv_image = self.increase_brightness2(cv_image, self.GAMMA)
             show_image('gamma correction', cv_image)
 
-            rospy.loginfo('QRColorDetection: Sharpening image')
+            rospy.loginfo('ColorDetect: Sharpening image')
             cv_image = self.sharpen_image(cv_image)
 
-            rospy.loginfo('QRColorDetection: Decoding image')
+            rospy.loginfo('ColorDetect: Decoding image')
             boxes, npackages = self.get_qr_data(cv_image)
-            rospy.loginfo('QRColorDetection: Found {} packages'.format(npackages))
+            rospy.loginfo('ColorDetect: Found {} packages'.format(npackages))
 
             if npackages >= 9:
                 break
-            rospy.loginfo('QRColorDetection: Less than 9 packages detected trying again')
+            rospy.loginfo('ColorDetect: Less than 9 packages detected trying again')
 
             self.MAX_TRY -= 1
             self.GAMMA -= 0.1
 
         if self.MAX_TRY <= 0:
-            rospy.logerr('QRColorDetection: Detection of atleast 9 packages failed')
+            rospy.logerr('ColorDetect: Detection of atleast 9 packages failed')
 
         box_name = self.name_boxes(boxes)
 
         self.packages = self.box_name_to_dict(box_name)
         rospy.loginfo('Detected the following packages: ' + str(self.packages))
 
-        # NOTE: Can directly store a dictionary in param server but defaulting to store
-        # string since most code has been designed to work that way.
         rospy.set_param("DetectedPackages", self.packages)
-        rospy.loginfo("QRColorDetection: set param done")
+        rospy.loginfo("ColorDetect: set param done")
 
         if DEBUG_SHOW_IMAGE:
             for (x, y, w, h, _) in boxes:
@@ -217,6 +250,7 @@ class Camera1(object):
 def main():
     rospy.init_node('node_t4_color_detect', anonymous=True)
 
+    rospy.loginfo("ColorDetect: Waiting 10s for gazebo to load all packages")
     # Wait for gazebo to load all packages
     rospy.sleep(10)
     Camera1().detect_packages()
@@ -228,7 +262,6 @@ def main():
 
     if DEBUG_SHOW_IMAGE:
         cv2.destroyAllWindows()
-
 
 if __name__ == '__main__':
     main()
