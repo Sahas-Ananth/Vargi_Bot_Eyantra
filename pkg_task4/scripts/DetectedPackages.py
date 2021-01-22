@@ -33,9 +33,12 @@ class DetectedPackages(object):
         self.packages = result.packages
 
     def get_packages(self):
-        goal = DetectPackagesGoal()
-        self.client.send_goal(goal, done_cb=self.done_cb)
-        self.client.wait_for_result()
+        while not rospy.has_param("DetectedPackages"):
+            pass
+        # goal = DetectPackagesGoal()
+        # self.client.send_goal(goal, done_cb=self.done_cb)
+        # self.client.wait_for_result()
+        self.packages = rospy.get_param("DetectedPackages")
 
         return list_to_dict(self.packages)
 

@@ -169,7 +169,7 @@ class Camera1(object):
     def callback(self, data):
         self.data_frame = data
 
-    def detect_packages(self, goal):
+    def detect_packages(self, goal = None):
         while self.data_frame is None:
             rospy.sleep(0.5)
 
@@ -209,9 +209,14 @@ class Camera1(object):
         rospy.loginfo('Detected the following packages: ' + str(self.packages))
 
         result = DetectPackagesResult()
+        # NOTE: Can directly store a dictionary in param server but defaulting to store
+        # string since most code has been designed to work that way.
         result.packages = str(self.packages)
+        rospy.set_param("DetectedPackages", str(self.packages))
+        rospy.loginfo("QRColorDetection: set param done")
+
         rospy.loginfo("QRColorDetection: send goal result to client")
-        self.action_server.set_succeeded(result)
+        # self.action_server.set_succeeded(result)
 
         if DEBUG_SHOW_IMAGE:
             for (x, y, w, h, _) in boxes:
@@ -224,7 +229,7 @@ class Camera1(object):
 
 def main():
     rospy.init_node('node_eg3_qr_decode', anonymous=True)
-    Camera1()
+    Camera1().detect_packages()
 
     try:
         rospy.spin()
