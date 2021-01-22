@@ -15,7 +15,6 @@ from cv_bridge import CvBridge, CvBridgeError
 import rospy
 import actionlib
 from sensor_msgs.msg import Image
-from pkg_task4.msg import DetectPackagesAction, DetectPackagesResult
 
 DEBUG_SHOW_IMAGE = False
 
@@ -35,18 +34,11 @@ class Camera1(object):
 
         self.image_sub = rospy.Subscriber(
             "/eyrc/vb/camera_1/image_raw", Image, self.callback)
-        self.action_server = actionlib.SimpleActionServer('camera_1_detect_packages',
-                                                          DetectPackagesAction,
-                                                          self.detect_packages,
-                                                          False)
 
         self.MAX_TRY = 5
         self.GAMMA = 0.9
-        self.packages = []
+        self.packages = {}
         self.data_frame = None
-
-        rospy.loginfo('QRColorDetection: SimpleActionServer started')
-        self.action_server.start()
 
     def sharpen_image(self, img):
         filt = np.array([[-1, -1, -1], [-1, 9, -1], [-1, -1, -1]])
@@ -156,13 +148,13 @@ class Camera1(object):
 
         return res
 
-    def box_name_to_list(self, rows):
-        boxes = []
+    def box_name_to_dict(self, rows):
+        boxes = {}
         for i, row in enumerate(rows):
             for j, col in enumerate(row):
                 if col is None:
                     continue
-                boxes.append('packagen{}{}={}'.format(i, j, col[2]))
+                boxes['packagen{}{}'.format(i, j)] = col[2]
 
         return boxes
 
@@ -205,18 +197,13 @@ class Camera1(object):
 
         box_name = self.name_boxes(boxes)
 
-        self.packages = self.box_name_to_list(box_name)
+        self.packages = self.box_name_to_dict(box_name)
         rospy.loginfo('Detected the following packages: ' + str(self.packages))
 
-        result = DetectPackagesResult()
         # NOTE: Can directly store a dictionary in param server but defaulting to store
         # string since most code has been designed to work that way.
-        result.packages = str(self.packages)
-        rospy.set_param("DetectedPackages", str(self.packages))
+        rospy.set_param("DetectedPackages", self.packages)
         rospy.loginfo("QRColorDetection: set param done")
-
-        rospy.loginfo("QRColorDetection: send goal result to client")
-        # self.action_server.set_succeeded(result)
 
         if DEBUG_SHOW_IMAGE:
             for (x, y, w, h, _) in boxes:
@@ -228,7 +215,8 @@ class Camera1(object):
 
 
 def main():
-    rospy.init_node('node_eg3_qr_decode', anonymous=True)
+    rospy.init_node('node_t4_color_detect', anonymous=True)
+
     # Wait for gazebo to load all packages
     rospy.sleep(10)
     Camera1().detect_packages()
