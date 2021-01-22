@@ -121,10 +121,11 @@ class Sorter(object):
 
         rospy.logdebug('\033[33;1mSending result back to client\033[0m')
         obj_msg_result.success = True
-        self._sas.set_succeeded(obj_msg_result)
 
         while not self._get_bin(package_colour) and not rospy.is_shutdown():
             rospy.sleep(0.5)
+
+        self._sas.set_succeeded(obj_msg_result)
 
         self._ur5.gripper(package_name, False)
         self._ur5.remove_box(package_name, 0.5)
