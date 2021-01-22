@@ -45,7 +45,7 @@ class picker(object):
             self._ur5.hard_set_joint_angles(ur5_new_starting_angles, 3)
 
             picked += 1
-            if picked >= 10:
+            if picked >= 9:
                 break
 
 
