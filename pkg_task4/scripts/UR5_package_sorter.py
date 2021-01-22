@@ -20,6 +20,7 @@ class Sorter(object):
     Sorted: Represents the UR5 Arm 2. Picks packages from the conveyor
     when an action is sent from the LogicalCamer (LC2Control).
     """
+
     def __init__(self):
         rospy.init_node("node_t4_sorter_control")
 
@@ -76,7 +77,6 @@ class Sorter(object):
         package_name = obj_msg_goal.package_name
         package_colour = obj_msg_goal.colour
 
-
         # Pose of the package w.r.t the logical camera
         package_pose = obj_msg_goal.package_pose
 
@@ -96,20 +96,23 @@ class Sorter(object):
 
         # Manual translations
         # Find difference between the ur5 wrist and package pose
-        rospy.loginfo('Pose of package w.r.t world: {}, {}, {}'.format(pose_x, pose_y, pose_z))
+        rospy.loginfo('Pose of package w.r.t world: {}, {}, {}'.format(
+            pose_x, pose_y, pose_z))
 
         # Find translation between UR5 wrist and package
         trans_x = pose_x - ee_x
         trans_y = pose_y - ee_y - 0.05
         trans_z = pose_z - ee_z + 0.2
-        rospy.loginfo('Translation: {}, {}, {}'.format(trans_x, trans_y, trans_z))
+        rospy.loginfo('Translation: {}, {}, {}'.format(
+            trans_x, trans_y, trans_z))
 
         # # Send Result to the Client
         obj_msg_result = task4Result()
 
         tries = 3
         while tries > 0 and not self._ur5.ee_cartesian_translation(trans_x, trans_y, trans_z) and not rospy.is_shutdown():
-            rospy.loginfo('\033[33;1mMoving to package failed, Trying again\033[0m')
+            rospy.loginfo(
+                '\033[33;1mMoving to package failed, Trying again\033[0m')
             rospy.sleep(0.5)
             tries -= 1
         if tries == 0:
@@ -121,7 +124,7 @@ class Sorter(object):
         # Lookup the translation of the packages w.r.t to world
         # to add the package to scene.
         trans = self._tf.lookup_transform(
-             "world", self._ref_frame.format(package_name))
+            "world", self._ref_frame.format(package_name))
 
         pose = PoseStamped()
         pose.header.frame_id = "world"
@@ -143,7 +146,8 @@ class Sorter(object):
         self._ur5.gripper(package_name, False)
         self._ur5.remove_box(package_name, 0.5)
         rospy.loginfo("Gripper Dectivated")
-        self._ur5.set_joint_angles(ur5_new_starting_angles)
+        while not self._ur5.hard_set_joint_angles(ur5_new_starting_angles, 3) and not rospy.is_shutdown():
+            rospy.sleep(0.5)
 
 
 if __name__ == '__main__':
