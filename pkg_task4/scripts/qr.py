@@ -198,7 +198,7 @@ class Camera1(object):
             rospy.loginfo('QRColorDetection: Less than 9 packages detected trying again')
 
             self.MAX_TRY -= 1
-            self.GAMMA -= 1
+            self.GAMMA -= 0.1
 
         if self.MAX_TRY <= 0:
             rospy.logerr('QRColorDetection: Detection of atleast 9 packages failed')
