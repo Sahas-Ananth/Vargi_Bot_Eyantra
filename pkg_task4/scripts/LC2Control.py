@@ -130,7 +130,7 @@ def main():
     """
         Instantiates a rospy node and Camera object.
     """
-#    rospy.sleep(10)
+    rospy.sleep(10)
 
     Camera()
 

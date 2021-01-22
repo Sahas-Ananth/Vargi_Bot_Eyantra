@@ -50,6 +50,7 @@ class picker(object):
 
 
 if __name__ == "__main__":
+    rospy.sleep(10)
     pick = picker()
     pick.run()
     rospy.loginfo("Picker: Picked all packages")

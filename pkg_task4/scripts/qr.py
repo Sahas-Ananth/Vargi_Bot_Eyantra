@@ -229,6 +229,8 @@ class Camera1(object):
 
 def main():
     rospy.init_node('node_eg3_qr_decode', anonymous=True)
+    # Wait for gazebo to load all packages
+    rospy.sleep(10)
     Camera1().detect_packages()
 
     try:
