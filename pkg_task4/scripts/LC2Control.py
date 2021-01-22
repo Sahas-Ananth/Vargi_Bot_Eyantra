@@ -74,6 +74,8 @@ class Camera(object):
 
         if result.success is True:
             self.processed.append(self.current_package)
+            # HACK: Wait for the package to get picked up before starting the conveyor again
+            rospy.sleep(0.5)
             if len(self.processed) != 9:
                 self.conveyor.set_power(100)
         else:

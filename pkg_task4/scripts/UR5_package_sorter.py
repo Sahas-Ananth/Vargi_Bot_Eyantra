@@ -115,9 +115,13 @@ class Sorter(object):
         pose.pose.position = trans.transform.translation
         pose.pose.orientation = trans.transform.rotation
 
-        # self._ur5.add_box(package_name, pose, box_length, 0.5)
+        self._ur5.add_box(package_name, pose, box_length, 0.5)
         self._ur5.gripper(package_name, True)
         rospy.loginfo("Gripper Activated")
+
+        rospy.logdebug('\033[33;1mSending result back to client\033[0m')
+        obj_msg_result.success = True
+        self._sas.set_succeeded(obj_msg_result)
 
         while not self._get_bin(package_colour) and not rospy.is_shutdown():
             rospy.sleep(0.5)
@@ -126,10 +130,6 @@ class Sorter(object):
         self._ur5.remove_box(package_name, 0.5)
         rospy.loginfo("Gripper Dectivated")
         self._ur5.set_joint_angles(ur5_new_starting_angles)
-
-        rospy.logdebug('\033[33;1mSending result back to client\033[0m')
-        obj_msg_result.success = True
-        self._sas.set_succeeded(obj_msg_result)
 
 
 if __name__ == '__main__':
