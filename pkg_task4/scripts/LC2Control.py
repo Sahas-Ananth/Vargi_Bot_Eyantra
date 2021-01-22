@@ -50,7 +50,7 @@ class Camera(object):
                                        LogicalCameraImage, self.process_frame,
                                        queue_size=1)
 
-    def send_goal(self, name, colour, package_pose, robot_pose):
+    def send_goal(self, name, colour, package_pose):
         """
             Sends the goal to the UR5 controller on detecting
             a package in pickable range.
@@ -59,15 +59,13 @@ class Camera(object):
             the pose.
         """
         goal = task4Goal(package_name=name, colour=colour,
-                         package_pose=package_pose, ur5_pose=robot_pose)
+                         package_pose=package_pose)
 
         self.simple_client.send_goal(goal, done_cb=self._done_callback,
                                      feedback_cb=self._feedback_callback)
         rospy.loginfo('\033[34;1m' +
                       "Goal: name = {}\nColour: {}\nPackage_Pose = {}\n"\
-                      "Robot_pose = {} sent.".format(name, colour,
-                                                     str(package_pose),
-                                                     str(robot_pose)) + '\033[0m')
+                      "sent.".format(name, colour, str(package_pose)) + '\033[0m')
 
     def _done_callback(self, _status, result):
         self.processing = False
@@ -92,7 +90,6 @@ class Camera(object):
             package that is in pickable range and sending the goal
             to the ur5 controller.
         """
-        last_ur5_pose = []
         if self.processing:
             return
 
@@ -106,7 +103,6 @@ class Camera(object):
         current_packages = []
         for model in models:
             if model.type == "ur5":
-                last_ur5_pose.append(model)
                 continue
             if model.type not in self.processed:
                 current_packages.append(model)
@@ -122,7 +118,7 @@ class Camera(object):
             self.conveyor.stop()
             self.send_goal(current_packages[0].type,
                            self.package_colours[current_packages[0].type],
-                           current_packages[0].pose, last_ur5_pose[0].pose)
+                           current_packages[0].pose)
             self.current_package = current_packages[0].type
             self.processing = True
             return
