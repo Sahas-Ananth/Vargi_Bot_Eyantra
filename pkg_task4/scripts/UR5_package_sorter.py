@@ -89,7 +89,7 @@ class Sorter(object):
 
         # Find translation between UR5 wrist and package
         trans_x = pose_x - ee_x
-        trans_y = pose_y - ee_y - 0.1
+        trans_y = pose_y - ee_y - 0.05
         trans_z = pose_z - ee_z + 0.2
         rospy.loginfo('Translation: {}, {}, {}'.format(trans_x, trans_y, trans_z))
 
