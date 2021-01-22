@@ -8,7 +8,7 @@ from pkg_task4.msg import task4Goal
 from hrwros_gazebo.msg import LogicalCameraImage
 from ConveyorControl import Conveyor
 from models import *
-from qr import *
+from DetectedPackages import DetectedPackages
 
 
 class Camera(object):
@@ -19,17 +19,14 @@ class Camera(object):
     """
 
     def __init__(self):
+        rospy.init_node("Logical_camera2_control")
+
         self.simple_client = actionlib.SimpleActionClient(
             "/ur5_pkg_sorter", task4Action)
 
         self.conveyor = Conveyor()
-
-        self.camera2d = Camera1()
-
-        self.package_colours = self.camera2d.packages
-        # self.package_colours = pkg_colours
-
-        rospy.loginfo("Colour of packages: {}\n".format(self.package_colours))
+        # NOTE: Hope multiple calls don't happen to simple action server
+        self.detected_packages = DetectedPackages()
 
         self.processing = False
         self.processed = []
@@ -43,6 +40,11 @@ class Camera(object):
 
         # Start the conveyor
         self.conveyor.set_power(100)
+
+        self.package_colours = self.detected_packages.get_packages()
+
+        rospy.loginfo("Colour of packages: {}\n".format(self.package_colours))
+
 
         self.camera = rospy.Subscriber("/eyrc/vb/logical_camera_2",
                                        LogicalCameraImage, self.process_frame,
@@ -62,7 +64,10 @@ class Camera(object):
         self.simple_client.send_goal(goal, done_cb=self._done_callback,
                                      feedback_cb=self._feedback_callback)
         rospy.loginfo('\033[34;1m' +
-                      "Goal: name = {}\nColour: {}\nPackage_Pose = {}\nRobot_pose = {} sent.".format(name, colour, str(package_pose), str(robot_pose)) + '\033[0m')
+                      "Goal: name = {}\nColour: {}\nPackage_Pose = {}\n"\
+                      "Robot_pose = {} sent.".format(name, colour,
+                                                     str(package_pose),
+                                                     str(robot_pose)) + '\033[0m')
 
     def _done_callback(self, _status, result):
         self.processing = False
@@ -125,8 +130,7 @@ def main():
     """
         Instantiates a rospy node and Camera object.
     """
-    rospy.init_node("Logical_camera2_control")
-    rospy.sleep(10)
+#    rospy.sleep(10)
 
     Camera()
 
