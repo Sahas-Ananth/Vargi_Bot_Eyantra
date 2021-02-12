@@ -1,3 +1,7 @@
 .vscode
 dummy/
 pkg_task4/scripts/*.pyc
+pkg_ros_iot_bridge/scripts/pyiot/*.pyc
+pkg_task4/scripts/__init__.py
+pkg_task5/scripts/*.pyc
+pkg_task5/scripts/__init__.py
