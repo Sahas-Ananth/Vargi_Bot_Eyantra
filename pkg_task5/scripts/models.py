@@ -31,10 +31,6 @@ lookup_dict2 = {"Medicine": ["red", "HP", 4000, 1],
                 "Food": ["yellow", "MP", 2000, 3],
                 "Clothes": ["green", "LP", 1000, 5]}
 
-lookup_dict3 = {"red": ["packagen00", "packagen12", "packagen21", "packagen32"],
-                "yellow": ["packagen01", "packagen11", "packagen22", "packagen30"],
-                "green": ["packagen02", "packagen10", "packagen20", "packagen31"]}
-
 # UR5 Starting position
 ur5_starting_pose = geometry_msgs.msg.Pose()
 ur5_starting_pose.position.x = -0.80

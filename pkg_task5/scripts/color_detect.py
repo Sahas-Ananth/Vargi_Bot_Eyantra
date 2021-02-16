@@ -186,6 +186,12 @@ class Camera1(object):
 
         return boxes
 
+    def box_color_to_package_name(self, boxes):
+        result = {}
+        for (key, value) in boxes.items():
+            result.setdefault(value, []).append(key)
+        return result
+
     def callback(self, data):
         self.data_frame = data
 
@@ -233,9 +239,11 @@ class Camera1(object):
         box_name = self.name_boxes(boxes)
 
         self.packages = self.box_name_to_dict(box_name)
+        dict3 = self.box_color_to_package_name(self.packages)
         rospy.loginfo('Detected the following packages: ' + str(self.packages))
 
         rospy.set_param("DetectedPackages", self.packages)
+        rospy.set_param("Dict3", self.dict3)
         rospy.loginfo("ColorDetect: set param done")
 
         if DEBUG_SHOW_IMAGE:
