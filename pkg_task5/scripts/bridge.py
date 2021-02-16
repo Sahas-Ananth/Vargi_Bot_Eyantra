@@ -25,6 +25,8 @@ class RosIoTBridge:
 
         self.team_id = "VB#2195"
         self.unique_id = "EndEplEa"
+        self.dispatched_time = {}
+        self.shipped_time = {}
 
         detected_packages = DetectedPackages()
         self.packages = detected_packages.get_packages()
@@ -71,12 +73,14 @@ class RosIoTBridge:
                 order["order_id"], sheet_name))
         elif sheet_name == "OrdersDispatched":
             item_name = order["item"]
+            self.dispatched_time[order["order_id"]] = dt.datetime.now()
             self.pushtoSheets(
                 id="OrdersDispatched",
                 Team_ID=self.team_id,
                 Unique_ID=self.unique_id,
                 Order_ID=order["order_id"],
-                Dispatch_Date_and_Time=str(dt.datetime.now()),
+                Dispatch_Date_and_Time=str(
+                    self.dispatched_time[order["order_id"]]),
                 Item=item_name,
                 Priority=self.dict_lookup(item_name, 1, 2),
                 Dispatch_Quantity=order["qty"],
@@ -88,12 +92,14 @@ class RosIoTBridge:
                 order["order_id"], sheet_name))
         elif sheet_name == "OrdersShipped":
             item_name = order["item"]
+            self.shipped_time[order["order_id"]] = dt.datetime.now()
             self.pushtoSheets(
                 id="OrdersShipped",
                 Team_ID=self.team_id,
                 Unique_ID=self.unique_id,
                 Order_ID=order["order_id"],
-                Shipped_Date_and_Time=str(dt.datetime.now()),
+                Shipped_Date_and_Time=str(
+                    self.shipped_time[order["order_id"]]),
                 Item=item_name,
                 Priority=self.dict_lookup(item_name, 1, 2),
                 Shipped_Quantity=order["qty"],
@@ -134,6 +140,28 @@ class RosIoTBridge:
                     "{} sheet has been sucessfully updates".format(sheet_name))
                 # TODO: Make this time independant
                 rospy.sleep(2)
+        elif sheet_name == "Dashboard":
+            item_name = order["item"]
+            diff = self.shipped_time[order["order_id"]] - \
+                self.dispatched_time[order["order_id"]]
+            self.pushtoSheets(
+                id="Dashboard",
+                Order_ID=order["order_id"],
+                Item=item_name,
+                Priority=self.dict_lookup(item_name, 1, 2),
+                City=order["city"],
+                Longitude=order["lon"],
+                Latitude=order["lat"],
+                Shipped="Yes",
+                Dispatched="Yes",
+                Order_Date_and_Time=order["order_time"],
+                Dispatch_Date_and_Time=str(
+                    self.dispatched_time[order["order_id"]]),
+                Shipped_Date_and_Time=str(
+                    self.shipped_time[order["order_id"]]),
+                Time_Taken=str(diff))
+            rospy.loginfo("{} has been updated successfully in {}".format(
+                order["order_id"], sheet_name))
         else:
             rospy.loginfo("Error! Wrong sheet name")
 

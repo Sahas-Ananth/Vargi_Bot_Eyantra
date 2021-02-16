@@ -7,6 +7,11 @@ This module represents the UR5 Arm 2.
 import rospy
 import actionlib
 
+from std_msgs.msg import String
+import json
+
+from bridge import RosIoTBridge
+
 from pkg_task5.msg import task5Action, task5Result
 from ConveyorControl import Conveyor
 from UR5Controls import Ur5Controller
@@ -36,6 +41,12 @@ class Sorter(object):
         self._conveyor = Conveyor()
         self._tf = TF()
 
+        self.curr_order_sub = rospy.Subscriber(
+            name="Current_order", data_class=String, callback=self.get_current_order)
+        self.orders = []
+
+        self.sheet_control = RosIoTBridge()
+
         # SimpleActionServer is used to send info about packages
         # under Logical camera.
         self._sas = actionlib.SimpleActionServer(
@@ -48,6 +59,9 @@ class Sorter(object):
         rospy.loginfo(
             "\033[32;1mUR5 Sorter: Starting Simple Action Server.\033[0m")
         self._sas.start()
+
+    def get_current_order(self, msg):
+        self.orders.append(json.loads(msg.data))
 
     def _get_bin(self, colour):
         """
@@ -145,6 +159,11 @@ class Sorter(object):
 
         self._ur5.gripper(package_name, False)
         self._ur5.remove_box(package_name, 0.5)
+
+        self.sheet_control.update_sheets("OrdersShipped", self.orders[0])
+        self.sheet_control.update_sheets("Dashboard", self.orders[0])
+        self.orders.pop(0)
+
         rospy.loginfo("Gripper Dectivated")
         while not self._ur5.hard_set_joint_angles(ur5_new_starting_angles, 3) and not rospy.is_shutdown():
             rospy.sleep(0.5)

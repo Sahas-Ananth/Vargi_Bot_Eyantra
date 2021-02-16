@@ -15,19 +15,24 @@ from cv_bridge import CvBridge, CvBridgeError
 import rospy
 import actionlib
 from sensor_msgs.msg import Image
+from bridge import RosIoTBridge
 
 # Set true to see the processed images from openCV
 DEBUG_SHOW_IMAGE = False
 
+
 def sort_by_x(obj):
     return obj.rect[0]
+
 
 def sort_by_y(obj):
     return obj.rect[1]
 
+
 def show_image(title, image):
     if DEBUG_SHOW_IMAGE:
         cv2.imshow(title, image)
+
 
 class Camera1(object):
     """
@@ -35,11 +40,14 @@ class Camera1(object):
     to detect the package colors after processing the images throught
     openCV.
     """
+
     def __init__(self):
         self.bridge = CvBridge()
 
         self.image_sub = rospy.Subscriber(
             "/eyrc/vb/camera_1/image_raw", Image, self.callback)
+
+        self.sheet_control = RosIoTBridge()
 
         self.MAX_TRY = 5
         self.GAMMA = 0.9
@@ -68,7 +76,7 @@ class Camera1(object):
 
         return new_image
 
-    def increase_brightness2(self, image, gamma = 0.5):
+    def increase_brightness2(self, image, gamma=0.5):
         """
             Gamma correct the image
         """
@@ -195,7 +203,7 @@ class Camera1(object):
     def callback(self, data):
         self.data_frame = data
 
-    def detect_packages(self, goal = None):
+    def detect_packages(self, goal=None):
         """
         Detect the colour of the packages using pyzbar and processing
         the image with different brigthness. This is also saves
@@ -228,7 +236,8 @@ class Camera1(object):
 
             if npackages >= 9:
                 break
-            rospy.loginfo('ColorDetect: Less than 9 packages detected trying again')
+            rospy.loginfo(
+                'ColorDetect: Less than 9 packages detected trying again')
 
             self.MAX_TRY -= 1
             self.GAMMA -= 0.1
@@ -239,12 +248,13 @@ class Camera1(object):
         box_name = self.name_boxes(boxes)
 
         self.packages = self.box_name_to_dict(box_name)
-        dict3 = self.box_color_to_package_name(self.packages)
+        self.dict3 = self.box_color_to_package_name(self.packages)
         rospy.loginfo('Detected the following packages: ' + str(self.packages))
 
         rospy.set_param("DetectedPackages", self.packages)
         rospy.set_param("Dict3", self.dict3)
         rospy.loginfo("ColorDetect: set param done")
+        self.sheet_control.update_sheets(sheet_name="Inventory", {})
 
         if DEBUG_SHOW_IMAGE:
             for (x, y, w, h, _) in boxes:
@@ -270,6 +280,7 @@ def main():
 
     if DEBUG_SHOW_IMAGE:
         cv2.destroyAllWindows()
+
 
 if __name__ == '__main__':
     main()

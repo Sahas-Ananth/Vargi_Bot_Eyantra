@@ -3,6 +3,7 @@
 import json
 
 import rospy
+from std_msgs.msg import String
 from pkg_ros_iot_bridge.msg import msgMqttSub
 
 from models import *
@@ -36,6 +37,9 @@ class Picker(object):
         self._mqtt_iot_topic = config_iot['mqtt']['topic_sub']
         self._mqtt_ros_sub_topic = config_iot['mqtt']['sub_cb_ros_topic']
         self.dict3 = rospy.get_param('Dict3')
+
+        self.curr_order_pub = rospy.Publisher(
+            name="Current_order", data_class=String, queue_size=5)
 
         self.picked_packages = []
         self.orders = []
@@ -76,7 +80,7 @@ class Picker(object):
         # Get List of all detected packages as dict with their name as key
         # and colour as value
         order = self.orders.pop(0)
-        pickable_packages = dict3[lookup_dict2[order["item"]][0]]
+        pickable_packages = self.dict3[lookup_dict2[order["item"]][0]]
         picked = 0
 
         for i in range(len(pickable_packages)):
@@ -91,6 +95,7 @@ class Picker(object):
 
                 self.picked_packages.append(pickable_packages[i])
                 self.ssupdater.update_sheets("OrdersDispatched", order)
+                self.curr_order_pub.publish(json.dumps(order))
                 picked = 1
                 if picked:
                     break
