@@ -1,59 +1,120 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>VB#2195(Eyantra-2020)</title>
-    <link rel="stylesheet" href="./index.css" />
-    <style> h1 {text-align: center;}</style>
-  </head>
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+		<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+		<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+		<title>Dashboard by VB#2195</title>
 
-  <body>
-    <div class="header__img">
-      <img class="header__img--in" src="./images/eeyantra_logo_whitetext.png" alt="" srcset="" />
-    </div>
+		<link rel="stylesheet" href="http://code.ionicframework.com/ionicons/1.5.2/css/ionicons.min.css">
+		<link rel="stylesheet" href="./awesomeicons/dist/leaflet.awesome-markers.css">
+		<script src="./awesomeicons/dist/leaflet.awesome-markers.js"></script>
 
-    <div class="welcome__text">
-      <h1 class="welcome__text--in">
-        We represent the team VB#2195 where we have been assigned to the theme of Varghi Bots
-      </h1>
-    </div>
+		<link rel="stylesheet" href="./index.css"/>
+		<script type = "text/javascript" src="main.js"></script>
+		<style> h1 {text-align: center;}</style>
+	</head>
 
-    <div class="theme__img">
-      <img src="./images/etheme_vb_1.png" alt="" class="theme__img--in" />
-    </div>
+	<body>
 
-    <div class="team__text">
-      <h1 class="team__text--in">
-        We Welcome you to view our perspective of the solution based on the problem statment stated
-        in Task -5
-      </h1>
-    </div>
-    <div> <h1><b> Integrated Product Delivery System</b></h1></div>
-    <div class="cards">
-      <ul class="cards__in">
-        <li class="cards__in--list">
-          <a href="PDS.html"><img src="./images/eimage_2.png" class="cards__in--listImg" alt="" /></a>
-          <h1><b>Product Delivery Schedule</b></h1>
-        </li>
-        <li class="cards__in--list">
-          <a href="PDL.html"><img src="./images/eimage_4.png" class="cards__in--listImg" alt="" /></a>
-          <h1><b>Product Delivery Location</b></h1>
-        </li>
-        <li class="cards__in--list">
-          <a href=""><img src="./images/eimage_3.png" class="cards__in--listImg" alt="" /></a>
-          <h1><b>Product Delivery Time</b></h1>
-        </li>
-      </ul>
-    </div>
-    <div class="VOT__text">
-      <h1 class="VOT__text--in">
-        We the team VB#2195 admire your time and effort to view our version of the solution and also wish to hear the results from you soon!!
-      </h1>
-    </div>
-    <div class="VOT__img">
-      <img src="./images/eimage_7.png" alt="" class="VOT__img--in" />
-    </div>
-  </body>
+		<!-- NavBar -->
+		<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+			<div class="container-fluid">
+				<a class="navbar-brand" href="#">
+					<img src="./images/eeyantra_logo_whitetext.png" width="150" height="50" alt="">
+				</a>
+					<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+					<span class="navbar-toggler-icon"></span>
+				</button>
+				<div class="collapse navbar-collapse" id="navbarNavDropdown">
+					<ul class="navbar-nav">
+						<li class="nav-item">
+							<a class="nav-link active" aria-current="page" href="#">Dashboard</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" href="#">Documentation</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</nav>
+		<!-- Intro Text and Theme Image -->
+		<div class="content">
+			<img src="./images/etheme_vb_1.png" alt="" class="theme_img" />
+			<div class="content-text">
+			We represent the team VB#2195 where we have been assigned to the theme of Varghi Bots. 
+			We Welcome you to view our perspective of the solution based on the problem statment stated
+			in Task-5
+			</div>
+		</div>
+
+		<!-- Graph, map, table -->
+		<div class="project">
+			<div class="table-holder"><span id="delivery-schedule-text">Product Delivery Schedule</span>
+				<div class="table_content">
+					<table class="content-table">
+						<tr class="active-row">
+							<th>Order ID</th>
+							<th>Item</th>
+							<th>Priority</th>
+							<th>Quantity</th>
+							<th>City</th>
+						</tr>
+						<tbody id="tableContent">
+						</tbody>
+					</table>  
+				</div>
+			</div>
+			<div class="map-holder">
+				<span id="delivery-schedule-text">Product Delivery Location</span>
+				<div class="map" id="map"></div>
+			</div>
+			<div class="graph-holder">
+				<span id="delivery-schedule-text">Product Delivery Time</span>
+				<div class="graph" id="column_chart"></div>
+			</div>
+		</div>
+		<!-- End Text -->
+		<div class="VOT__text">
+			<h1 class="VOT__text--in">
+				We the team VB#2195 admire your time and effort to view our version of the solution and also wish to hear the results from you soon!!
+			</h1>
+		</div>
+
+
+		<!-- Footer -->
+		<footer>
+			<div class="done">
+				<h4>Done By: </h4>
+				<ul class="done_by">
+					<li class="name">Sahasrajit A.</li>
+					<li class="name">Niteesh Babu G. S.</li>
+					<li class="name">Promoth N.</li>
+					<li class="name">Vishal Balaji Sivaraman</li>
+				</ul>
+			</div>
+			<div class="links">
+				<h4>Quick Links: </h4>
+				<ul class="quick_links">
+					<li class="link"><a href="#">Dashboard</a></li>
+					<li class="link"><a href="#">Delivery Schedule</a></li>
+					<li class="link"><a href="#">Delivery Locations</a></li>
+					<li class="link"><a href="#">Delivery Time</a></li>
+				</ul>
+			</div>
+		</footer>
+		
+		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js" integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0" crossorigin="anonymous"></script>
+		
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+		<script>
+			$(document).ready(TableRefresh());
+			$(document).ready(ChartRefresh());
+			$(document).ready(MapRefresh());
+		</script>
+	</body>
 </html>
