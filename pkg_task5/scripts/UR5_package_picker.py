@@ -36,6 +36,10 @@ class Picker(object):
         self._mqtt_ros_topic = config_iot['mqtt']['topic_pub']
         self._mqtt_iot_topic = config_iot['mqtt']['topic_sub']
         self._mqtt_ros_sub_topic = config_iot['mqtt']['sub_cb_ros_topic']
+
+        while not rospy.has_param("Dict3"):
+            pass
+
         self.dict3 = rospy.get_param('Dict3')
 
         self.curr_order_pub = rospy.Publisher(
@@ -70,6 +74,7 @@ class Picker(object):
         self.ssupdater.update_sheets("IncomingOrders", order)
         self.orders = sorted(
             self.orders, key=lambda i: i['item'], reverse=True)
+        print("\033[94m"+str(self.orders)+"\033[94m")
         self.run()
 
     def run(self):
@@ -80,6 +85,8 @@ class Picker(object):
         # Get List of all detected packages as dict with their name as key
         # and colour as value
         order = self.orders.pop(0)
+        rospy.loginfo("\033[32;1mOrder ID: {}\tOrder Item:{}\033[0m".format(
+            order["order_id"], order["item"]))
         pickable_packages = self.dict3[lookup_dict2[order["item"]][0]]
         picked = 0
 

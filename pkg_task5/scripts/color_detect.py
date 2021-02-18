@@ -47,8 +47,6 @@ class Camera1(object):
         self.image_sub = rospy.Subscriber(
             "/eyrc/vb/camera_1/image_raw", Image, self.callback)
 
-        self.sheet_control = RosIoTBridge()
-
         self.MAX_TRY = 5
         self.GAMMA = 0.9
         self.packages = {}
@@ -254,7 +252,8 @@ class Camera1(object):
         rospy.set_param("DetectedPackages", self.packages)
         rospy.set_param("Dict3", self.dict3)
         rospy.loginfo("ColorDetect: set param done")
-        self.sheet_control.update_sheets(sheet_name="Inventory", {})
+        self.sheet_control = RosIoTBridge()
+        self.sheet_control.update_sheets("Inventory", {})
 
         if DEBUG_SHOW_IMAGE:
             for (x, y, w, h, _) in boxes:
